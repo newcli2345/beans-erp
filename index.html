@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>บีนส์ ERP — ภาพรวมระบบ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=Bai+Jamjuree:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f9fafc;
+    --card:#ffffff;
+    --text:#1a2032;
+    --text2:#5c6478;
+    --accent:#2563eb;
+    --accent-bg:#eaf1ff;
+    --success:#16a34a;
+    --success-bg:#dcfce7;
+    --warning:#d97706;
+    --warning-bg:#fef3c7;
+    --danger:#dc2626;
+    --danger-bg:#fee2e2;
+    --border:#e5e9f0;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    font-family:"Anuphan","Sarabun",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+  h1,h2,h3, .money, .stat-value, .page-title, .brand{
+    font-family:"Bai Jamjuree","Anuphan",sans-serif;
+  }
+
+  /* ---------- hero ---------- */
+  .hero{
+    background:var(--text);
+    color:#fff;
+    padding:48px 20px 40px;
+    text-align:center;
+  }
+  .hero h1{ margin:0 0 8px; font-size:2rem; }
+  .hero p{ margin:0; color:#c7ccd6; font-size:1rem; }
+  .hero .hero-sub{ margin-top:14px; font-size:0.82rem; color:#8b93a7; }
+
+  .showcase-wrap{ max-width:1080px; margin:0 auto; padding:32px 16px 60px; }
+
+  .block-label{
+    font-size:1.15rem;
+    font-weight:700;
+    color:var(--text);
+    margin:0 0 14px;
+    padding-left:2px;
+  }
+  .block-label span{ color:var(--text2); font-weight:600; font-size:0.85rem; }
+
+  /* ---------- app frame chrome (shared by all 5 mockups) ---------- */
+  .app-frame{
+    display:flex;
+    min-height:600px;
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 10px 34px rgba(26,32,50,0.14);
+    border:1px solid var(--border);
+    margin-bottom:52px;
+    background:var(--bg);
+  }
+  .app-sidebar{
+    width:230px;
+    flex-shrink:0;
+    background:#fff;
+    border-right:1px solid var(--border);
+    padding:22px 14px;
+  }
+  .brand{
+    font-size:1.2rem;
+    font-weight:700;
+    color:var(--text);
+    margin-bottom:26px;
+    padding:0 8px;
+  }
+  .nav-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:11px 12px;
+    border-radius:10px;
+    margin-bottom:4px;
+    color:var(--text2);
+    font-size:0.92rem;
+    font-weight:600;
+  }
+  .nav-item.active{
+    background:var(--accent-bg);
+    color:var(--text);
+    font-weight:700;
+  }
+  .app-main{ flex:1; display:flex; flex-direction:column; min-width:0; }
+  .app-topbar{
+    height:60px;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:0 22px;
+    border-bottom:1px solid var(--border);
+    background:#fff;
+  }
+  .hamburger{
+    display:none;
+    background:none;
+    border:none;
+    font-size:1.35rem;
+    color:var(--text);
+    padding:0;
+  }
+  .page-title{ font-weight:700; font-size:1.08rem; color:var(--text); }
+  .topbar-right{ margin-left:auto; min-width:20px; }
+  .app-content{ flex:1; padding:22px; overflow:auto; background:var(--bg); }
+
+  @media (max-width:760px){
+    .app-sidebar{ display:none; }
+    .hamburger{ display:inline-block; }
+    .app-frame{ min-height:auto; }
+    .app-content{ padding:16px; }
+  }
+
+  /* ---------- generic content pieces ---------- */
+  .alert-bar{
+    background:#fff7ed;
+    border:1px solid #fed7aa;
+    color:#9a3412;
+    padding:11px 16px;
+    border-radius:10px;
+    font-size:0.85rem;
+    font-weight:600;
+    margin-bottom:18px;
+  }
+  .grid-cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(150px,1fr));
+    gap:14px;
+    margin-bottom:20px;
+  }
+  .card{
+    background:var(--card);
+    border-radius:14px;
+    padding:16px;
+    box-shadow:0 2px 10px rgba(26,32,50,0.06);
+  }
+  .stat-card .stat-label{ font-size:0.8rem; color:var(--text2); font-weight:600; margin-bottom:8px; }
+  .stat-card .stat-value{ font-size:1.6rem; font-weight:700; color:var(--text); }
+  .stat-card .stat-value.money::before{ content:"฿"; margin-right:2px; }
+
+  .card h3{
+    margin:0 0 12px;
+    font-size:0.95rem;
+    color:var(--text);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .list-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px 0;
+    border-bottom:1px solid #f0f1f5;
+    font-size:0.88rem;
+  }
+  .list-row:last-child{ border-bottom:none; }
+  .list-row .rank{
+    display:inline-flex;
+    width:20px; height:20px;
+    border-radius:50%;
+    background:var(--accent-bg);
+    color:var(--accent);
+    font-size:0.72rem;
+    font-weight:700;
+    align-items:center;
+    justify-content:center;
+    margin-right:8px;
+  }
+
+  .pill{
+    display:inline-block;
+    padding:3px 10px;
+    border-radius:999px;
+    font-size:0.72rem;
+    font-weight:700;
+    white-space:nowrap;
+  }
+  .pill-success{ background:var(--success-bg); color:var(--success); }
+  .pill-warning{ background:var(--warning-bg); color:var(--warning); }
+  .pill-danger{ background:var(--danger-bg); color:var(--danger); }
+  .pill-muted{ background:#eef0f4; color:var(--text2); }
+
+  .table-scroll{ overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; font-size:0.85rem; min-width:480px; }
+  thead th{
+    background:#f3f4f7;
+    color:var(--text2);
+    text-align:left;
+    padding:10px 12px;
+    font-weight:700;
+    white-space:nowrap;
+  }
+  tbody td{
+    padding:10px 12px;
+    border-bottom:1px solid #eef0f4;
+    color:var(--text);
+    white-space:nowrap;
+  }
+  .amount-cell{ text-align:right; font-family:"Bai Jamjuree"; font-weight:600; }
+  .amount-cell::before{ content:"฿"; margin-right:2px; color:var(--text2); font-weight:500; }
+
+  .btn-primary{
+    background:var(--text);
+    color:#fff;
+    border:none;
+    padding:10px 18px;
+    border-radius:10px;
+    font-weight:700;
+    font-size:0.86rem;
+    font-family:inherit;
+  }
+  .btn-csv{
+    background:#fff;
+    border:1px solid #d7dbe3;
+    color:var(--text);
+    padding:7px 14px;
+    border-radius:8px;
+    font-size:0.78rem;
+    font-weight:600;
+    font-family:inherit;
+  }
+  .toolbar-row{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top:12px;
+  }
+
+  /* stock bars */
+  .stock-bar-bg{ background:#eef0f4; border-radius:999px; height:8px; width:90px; overflow:hidden; }
+  .stock-bar-fill{ height:100%; border-radius:999px; }
+
+  /* POS mockup pieces */
+  .pos-layout{ display:flex; gap:16px; flex-wrap:wrap; }
+  .pos-menu-grid{
+    flex:2 1 320px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(100px,1fr));
+    gap:10px;
+    align-content:start;
+  }
+  .menu-card-mock{
+    background:#fff;
+    border:1.5px solid var(--border);
+    border-radius:12px;
+    padding:16px 6px;
+    text-align:center;
+  }
+  .menu-card-mock .mc-name{ font-weight:700; font-size:0.85rem; color:var(--text); }
+  .menu-card-mock .mc-price{ font-size:0.76rem; color:var(--text2); margin-top:4px; }
+  .pos-cart-mock{
+    flex:1 1 220px;
+    background:#fff;
+    border-radius:12px;
+    padding:14px;
+    border:1px solid var(--border);
+    height:fit-content;
+  }
+  .table-grid-mock{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(84px,1fr));
+    gap:8px;
+    margin-bottom:18px;
+  }
+  .table-tile-mock{
+    border-radius:10px;
+    padding:10px 6px;
+    text-align:center;
+    border:1.5px solid var(--border);
+    background:#fff;
+    font-size:0.78rem;
+  }
+  .table-tile-mock.occupied{ border-color:var(--warning); background:var(--warning-bg); }
+  .table-tile-mock .tt-label{ font-weight:700; color:var(--text); }
+  .table-tile-mock .tt-sub{ color:var(--text2); font-size:0.7rem; margin-top:2px; }
+  .table-tile-mock.occupied .tt-sub{ color:var(--warning); font-weight:700; }
+
+  /* check-in avatars */
+  .staff-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(160px,1fr)); gap:14px; margin-bottom:20px; }
+  .staff-card{ background:#fff; border-radius:14px; padding:16px; text-align:center; box-shadow:0 2px 10px rgba(26,32,50,0.06); }
+  .avatar-circle{
+    width:56px; height:56px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:1.1rem; color:#fff;
+    margin:0 auto 10px;
+  }
+  .staff-name{ font-weight:700; color:var(--text); font-size:0.92rem; margin-bottom:6px; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>☕ บีนส์ ERP</h1>
+  <p>ระบบหลังบ้านครบวงจรของร้านกาแฟบีนส์ — ขาย · ตัดสต๊อก · เช็คอิน · แดชบอร์ด ในแอพเดียว</p>
+  <div class="hero-sub">หน้านี้เป็นโบรชัวร์นำเสนอ ใช้ข้อมูลตัวอย่างประกอบการอธิบาย ยังไม่ใช่แอพใช้งานจริง</div>
+</div>
+
+<div class="showcase-wrap">
+
+  <!-- 1. DASHBOARD -->
+  <div class="block-label">1. แดชบอร์ดเจ้าของร้าน <span>— ภาพรวมทุกอย่างในหน้าเดียว</span></div>
+  <div class="app-frame">
+    <aside class="app-sidebar">
+      <div class="brand">☕ บีนส์</div>
+      <nav>
+        <div class="nav-item active">📊 แดชบอร์ด</div>
+        <div class="nav-item">🛎 ออเดอร์เข้า</div>
+        <div class="nav-item">🛒 ขาย</div>
+        <div class="nav-item">📦 สต๊อก</div>
+        <div class="nav-item">🧾 สูตร BOM</div>
+        <div class="nav-item">📸 เช็คอิน</div>
+      </nav>
+    </aside>
+    <div class="app-main">
+      <div class="app-topbar">
+        <button class="hamburger">☰</button>
+        <div class="page-title">แดชบอร์ด</div>
+        <div class="topbar-right"></div>
+      </div>
+      <div class="app-content">
+        <div class="alert-bar">⚠️ วัตถุดิบใกล้หมด: นมสด เหลือ 18% · ผงโกโก้ เหลือ 12%</div>
+
+        <div class="grid-cards">
+          <div class="card stat-card">
+            <div class="stat-label">ยอดขายวันนี้</div>
+            <div class="stat-value money">4,850</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-label">จำนวนบิลวันนี้</div>
+            <div class="stat-value">32 บิล</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-label">โต๊ะที่ค้างบิล</div>
+            <div class="stat-value">2 โต๊ะ</div>
+          </div>
+        </div>
+
+        <div class="grid-cards">
+          <div class="card">
+            <h3>เมนูขายดี 3 อันดับ (7 วัน)</h3>
+            <div class="list-row"><span><span class="rank">1</span>ลาเต้</span><strong>142 แก้ว</strong></div>
+            <div class="list-row"><span><span class="rank">2</span>อเมริกาโน่</span><strong>118 แก้ว</strong></div>
+            <div class="list-row"><span><span class="rank">3</span>ชาไทย</span><strong>95 แก้ว</strong></div>
+          </div>
+
+          <div class="card">
+            <h3>วัตถุดิบต้องระวัง</h3>
+            <div class="list-row"><span>นมสด</span><span class="pill pill-danger">18% แดง</span></div>
+            <div class="list-row"><span>ผงโกโก้</span><span class="pill pill-danger">12% แดง</span></div>
+            <div class="list-row"><span>ชาไทย</span><span class="pill pill-warning">42% เหลือง</span></div>
+          </div>
+
+          <div class="card">
+            <h3>ใครเข้างานวันนี้</h3>
+            <div class="list-row"><span>มายด์</span><span class="pill pill-success">เข้า 08:02</span></div>
+            <div class="list-row"><span>บอส</span><span class="pill pill-success">เข้า 13:05</span></div>
+            <div class="list-row"><span>แนน</span><span class="pill pill-muted">ยังไม่มา</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. SALES / POS -->
+  <div class="block-label">2. ขาย (POS) <span>— เมนูการ์ดใหญ่ กดเร็ว ผูกกับโต๊ะ</span></div>
+  <div class="app-frame">
+    <aside class="app-sidebar">
+      <div class="brand">☕ บีนส์</div>
+      <nav>
+        <div class="nav-item">📊 แดชบอร์ด</div>
+        <div class="nav-item">🛎 ออเดอร์เข้า</div>
+        <div class="nav-item active">🛒 ขาย</div>
+        <div class="nav-item">📦 สต๊อก</div>
+        <div class="nav-item">🧾 สูตร BOM</div>
+        <div class="nav-item">📸 เช็คอิน</div>
+      </nav>
+    </aside>
+    <div class="app-main">
+      <div class="app-topbar">
+        <button class="hamburger">☰</button>
+        <div class="page-title">ขาย</div>
+        <div class="topbar-right"></div>
+      </div>
+      <div class="app-content">
+        <h3 style="margin-bottom:10px;">เลือกโต๊ะ</h3>
+        <div class="table-grid-mock">
+          <div class="table-tile-mock"><div class="tt-label">โต๊ะ 1</div><div class="tt-sub">ว่าง</div></div>
+          <div class="table-tile-mock"><div class="tt-label">โต๊ะ 2</div><div class="tt-sub">ว่าง</div></div>
+          <div class="table-tile-mock occupied"><div class="tt-label">โต๊ะ 3</div><div class="tt-sub">฿175</div></div>
+          <div class="table-tile-mock"><div class="tt-label">โต๊ะ 4</div><div class="tt-sub">ว่าง</div></div>
+          <div class="table-tile-mock"><div class="tt-label">โต๊ะ 5</div><div class="tt-sub">ว่าง</div></div>
+          <div class="table-tile-mock occupied"><div class="tt-label">โต๊ะ 6</div><div class="tt-sub">฿110</div></div>
+          <div class="table-tile-mock"><div class="tt-label">โต๊ะ 7</div><div class="tt-sub">ว่าง</div></div>
+          <div class="table-tile-mock"><div class="tt-label">โต๊ะ 8</div><div class="tt-sub">ว่าง</div></div>
+          <div class="table-tile-mock"><div class="tt-label">กลับบ้าน</div><div class="tt-sub">ออเดอร์ใหม่</div></div>
+        </div>
+
+        <div class="pos-layout">
+          <div class="pos-menu-grid">
+            <div class="menu-card-mock"><div class="mc-name">อเมริกาโน่</div><div class="mc-price">55 บาท</div></div>
+            <div class="menu-card-mock"><div class="mc-name">ลาเต้</div><div class="mc-price">65 บาท</div></div>
+            <div class="menu-card-mock"><div class="mc-name">คาปูชิโน่</div><div class="mc-price">65 บาท</div></div>
+            <div class="menu-card-mock"><div class="mc-name">ชาไทย</div><div class="mc-price">50 บาท</div></div>
+            <div class="menu-card-mock"><div class="mc-name">โกโก้</div><div class="mc-price">60 บาท</div></div>
+            <div class="menu-card-mock"><div class="mc-name">เค้กกล้วยหอม</div><div class="mc-price">45 บาท</div></div>
+          </div>
+          <div class="pos-cart-mock">
+            <h3>ตะกร้า — โต๊ะ 5</h3>
+            <div class="list-row"><span>ลาเต้ x2</span><span class="amount-cell">130</span></div>
+            <div class="list-row"><span>เค้กกล้วยหอม x1</span><span class="amount-cell">45</span></div>
+            <div class="list-row"><strong>ยอดรวม</strong><strong class="amount-cell">175</strong></div>
+            <div class="toolbar-row" style="justify-content:stretch;">
+              <button class="btn-primary" style="width:100%;">เช็คบิล</button>
+            </div>
+          </div>
+        </div>
+
+        <h3 style="margin:18px 0 10px;">ประวัติบิลวันนี้</h3>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>เวลา</th><th>โต๊ะ</th><th>รายการ</th><th>ชำระ</th><th>ยอดรวม</th></tr></thead>
+            <tbody>
+              <tr><td>09:15</td><td>โต๊ะ 2</td><td>อเมริกาโน่ x2, ชาไทย x1</td><td>เงินสด</td><td class="amount-cell">160</td></tr>
+              <tr><td>10:40</td><td>กลับบ้าน</td><td>คาปูชิโน่ x1</td><td>โอน</td><td class="amount-cell">65</td></tr>
+              <tr><td>11:20</td><td>โต๊ะ 1</td><td>ลาเต้ x2, เค้กกล้วยหอม x3</td><td>เงินสด</td><td class="amount-cell">265</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="toolbar-row"><button class="btn-csv">⬇ ออกรายงาน CSV</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. STOCK -->
+  <div class="block-label">3. สต๊อก <span>— ตัดอัตโนมัติตามสูตร แจ้งเตือนของใกล้หมด</span></div>
+  <div class="app-frame">
+    <aside class="app-sidebar">
+      <div class="brand">☕ บีนส์</div>
+      <nav>
+        <div class="nav-item">📊 แดชบอร์ด</div>
+        <div class="nav-item">🛎 ออเดอร์เข้า</div>
+        <div class="nav-item">🛒 ขาย</div>
+        <div class="nav-item active">📦 สต๊อก</div>
+        <div class="nav-item">🧾 สูตร BOM</div>
+        <div class="nav-item">📸 เช็คอิน</div>
+      </nav>
+    </aside>
+    <div class="app-main">
+      <div class="app-topbar">
+        <button class="hamburger">☰</button>
+        <div class="page-title">สต๊อก</div>
+        <div class="topbar-right"></div>
+      </div>
+      <div class="app-content">
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>วัตถุดิบ</th><th>คงเหลือ</th><th>ตั้งต้น</th><th>สัดส่วนคงเหลือ</th><th>สถานะ</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>เมล็ดกาแฟ</td><td>1,120 g</td><td>2,000 g</td>
+                <td><div class="stock-bar-bg"><div class="stock-bar-fill" style="width:56%;background:var(--success);"></div></div></td>
+                <td><span class="pill pill-success">56% ปกติ</span></td>
+              </tr>
+              <tr>
+                <td>นมสด</td><td>1,080 ml</td><td>6,000 ml</td>
+                <td><div class="stock-bar-bg"><div class="stock-bar-fill" style="width:18%;background:var(--danger);"></div></div></td>
+                <td><span class="pill pill-danger">18% ใกล้หมด</span></td>
+              </tr>
+              <tr>
+                <td>ผงโกโก้</td><td>60 g</td><td>500 g</td>
+                <td><div class="stock-bar-bg"><div class="stock-bar-fill" style="width:12%;background:var(--danger);"></div></div></td>
+                <td><span class="pill pill-danger">12% ใกล้หมด</span></td>
+              </tr>
+              <tr>
+                <td>ชาไทย</td><td>210 g</td><td>500 g</td>
+                <td><div class="stock-bar-bg"><div class="stock-bar-fill" style="width:42%;background:var(--warning);"></div></div></td>
+                <td><span class="pill pill-warning">42% เหลือน้อย</span></td>
+              </tr>
+              <tr>
+                <td>แก้ว/บรรจุภัณฑ์</td><td>64 ใบ</td><td>100 ใบ</td>
+                <td><div class="stock-bar-bg"><div class="stock-bar-fill" style="width:64%;background:var(--success);"></div></div></td>
+                <td><span class="pill pill-success">64% ปกติ</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="toolbar-row">
+          <button class="btn-csv">⬇ ออกรายงาน CSV</button>
+          <button class="btn-primary">+ รับของเข้า</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. BOM -->
+  <div class="block-label">4. สูตร BOM <span>— เมนู 1 หน่วยใช้วัตถุดิบอะไรบ้าง</span></div>
+  <div class="app-frame">
+    <aside class="app-sidebar">
+      <div class="brand">☕ บีนส์</div>
+      <nav>
+        <div class="nav-item">📊 แดชบอร์ด</div>
+        <div class="nav-item">🛎 ออเดอร์เข้า</div>
+        <div class="nav-item">🛒 ขาย</div>
+        <div class="nav-item">📦 สต๊อก</div>
+        <div class="nav-item active">🧾 สูตร BOM</div>
+        <div class="nav-item">📸 เช็คอิน</div>
+      </nav>
+    </aside>
+    <div class="app-main">
+      <div class="app-topbar">
+        <button class="hamburger">☰</button>
+        <div class="page-title">สูตร BOM</div>
+        <div class="topbar-right"></div>
+      </div>
+      <div class="app-content">
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>เมนู (ต่อ 1 หน่วยขาย)</th><th>ส่วนผสมที่ใช้</th><th>ต้นทุนโดยประมาณ</th></tr></thead>
+            <tbody>
+              <tr><td>อเมริกาโน่</td><td>เมล็ดกาแฟ 18 g · แก้ว 1 ใบ</td><td>ยังไม่ตั้งราคาต้นทุน</td></tr>
+              <tr><td>ลาเต้</td><td>เมล็ดกาแฟ 18 g · นมสด 150 ml · แก้ว 1 ใบ</td><td>ยังไม่ตั้งราคาต้นทุน</td></tr>
+              <tr><td>คาปูชิโน่</td><td>เมล็ดกาแฟ 18 g · นมสด 120 ml · แก้ว 1 ใบ</td><td>ยังไม่ตั้งราคาต้นทุน</td></tr>
+              <tr><td>ชาไทย</td><td>ชาไทย 15 g · นมสด 100 ml · แก้ว 1 ใบ</td><td>ยังไม่ตั้งราคาต้นทุน</td></tr>
+              <tr><td>โกโก้</td><td>ผงโกโก้ 20 g · นมสด 150 ml · แก้ว 1 ใบ</td><td>ยังไม่ตั้งราคาต้นทุน</td></tr>
+              <tr><td>เค้กกล้วยหอม</td><td>แก้ว/บรรจุภัณฑ์ 1 ใบ</td><td>ยังไม่ตั้งราคาต้นทุน</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="toolbar-row"><button class="btn-csv">⬇ ออกรายงาน CSV</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. CHECK-IN -->
+  <div class="block-label">5. เช็คอิน <span>— ถ่ายรูปยืนยันตัวตนพนักงานเข้า/ออกงาน</span></div>
+  <div class="app-frame">
+    <aside class="app-sidebar">
+      <div class="brand">☕ บีนส์</div>
+      <nav>
+        <div class="nav-item">📊 แดชบอร์ด</div>
+        <div class="nav-item">🛎 ออเดอร์เข้า</div>
+        <div class="nav-item">🛒 ขาย</div>
+        <div class="nav-item">📦 สต๊อก</div>
+        <div class="nav-item">🧾 สูตร BOM</div>
+        <div class="nav-item active">📸 เช็คอิน</div>
+      </nav>
+    </aside>
+    <div class="app-main">
+      <div class="app-topbar">
+        <button class="hamburger">☰</button>
+        <div class="page-title">เช็คอิน</div>
+        <div class="topbar-right"></div>
+      </div>
+      <div class="app-content">
+        <div class="staff-grid">
+          <div class="staff-card">
+            <div class="avatar-circle" style="background:#2563eb;">มด</div>
+            <div class="staff-name">มายด์</div>
+            <span class="pill pill-success">เข้างาน 08:02</span>
+          </div>
+          <div class="staff-card">
+            <div class="avatar-circle" style="background:#d97706;">บส</div>
+            <div class="staff-name">บอส</div>
+            <span class="pill pill-success">เข้างาน 13:05</span>
+          </div>
+          <div class="staff-card">
+            <div class="avatar-circle" style="background:#9aa1b0;">นน</div>
+            <div class="staff-name">แนน</div>
+            <span class="pill pill-muted">ยังไม่เช็คอิน</span>
+          </div>
+        </div>
+
+        <h3 style="margin-bottom:10px;">ประวัติวันนี้</h3>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>รูป</th><th>ชื่อ</th><th>เวลา</th><th>ประเภท</th></tr></thead>
+            <tbody>
+              <tr><td><div class="avatar-circle" style="width:32px;height:32px;font-size:0.7rem;background:#2563eb;margin:0;">มด</div></td><td>มายด์</td><td>08:02</td><td><span class="pill pill-success">เข้างาน</span></td></tr>
+              <tr><td><div class="avatar-circle" style="width:32px;height:32px;font-size:0.7rem;background:#d97706;margin:0;">บส</div></td><td>บอส</td><td>13:05</td><td><span class="pill pill-success">เข้างาน</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="toolbar-row"><button class="btn-csv">⬇ ออกรายงาน CSV</button></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

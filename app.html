@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>บีนส์ ERP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=Bai+Jamjuree:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f9fafc;
+    --card:#ffffff;
+    --text:#1a2032;
+    --text2:#5c6478;
+    --accent:#2563eb;
+    --accent-bg:#eaf1ff;
+    --success:#16a34a;
+    --success-bg:#dcfce7;
+    --warning:#d97706;
+    --warning-bg:#fef3c7;
+    --danger:#dc2626;
+    --danger-bg:#fee2e2;
+    --border:#e5e9f0;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    font-family:"Anuphan","Sarabun",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+  h1,h2,h3,.page-title,.brand{ font-family:"Bai Jamjuree","Anuphan",sans-serif; }
+
+  .app-shell{ display:flex; height:100vh; overflow:hidden; }
+
+  .app-sidebar{
+    width:230px;
+    flex-shrink:0;
+    background:#fff;
+    border-right:1px solid var(--border);
+    padding:22px 14px;
+    overflow-y:auto;
+  }
+  .brand{ font-size:1.2rem; font-weight:700; color:var(--text); margin-bottom:26px; padding:0 8px; }
+  .nav-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:11px 12px;
+    border-radius:10px;
+    margin-bottom:4px;
+    color:var(--text2);
+    font-size:0.92rem;
+    font-weight:600;
+    cursor:pointer;
+    border:none;
+    background:none;
+    width:100%;
+    text-align:left;
+    font-family:inherit;
+  }
+  .nav-item:hover{ background:#f3f4f7; }
+  .nav-item.active{ background:var(--accent-bg); color:var(--text); font-weight:700; }
+  .nav-item.active:hover{ background:var(--accent-bg); }
+
+  .app-main{ flex:1; display:flex; flex-direction:column; min-width:0; }
+  .app-topbar{
+    height:60px;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:0 22px;
+    border-bottom:1px solid var(--border);
+    background:#fff;
+  }
+  .hamburger{
+    display:none;
+    background:none;
+    border:none;
+    font-size:1.4rem;
+    color:var(--text);
+    padding:0;
+    cursor:pointer;
+  }
+  .page-title{ font-weight:700; font-size:1.08rem; color:var(--text); }
+  .topbar-right{ margin-left:auto; min-width:20px; }
+  .app-content{ flex:1; padding:24px; overflow:auto; background:var(--bg); }
+
+  .sidebar-backdrop{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(26,32,50,0.45);
+    z-index:40;
+  }
+
+  @media (max-width:760px){
+    .app-sidebar{
+      position:fixed;
+      top:0; bottom:0; left:-260px;
+      z-index:50;
+      width:230px;
+      transition:left 0.2s ease;
+      box-shadow:0 0 24px rgba(0,0,0,0.15);
+    }
+    .app-sidebar.open{ left:0; }
+    .hamburger{ display:inline-block; }
+    .app-content{ padding:16px; }
+    .sidebar-backdrop.open{ display:block; }
+  }
+
+  /* placeholder page content */
+  .placeholder-box{
+    background:var(--card);
+    border-radius:14px;
+    padding:40px 20px;
+    text-align:center;
+    box-shadow:0 2px 10px rgba(26,32,50,0.06);
+    max-width:480px;
+    margin:40px auto 0;
+  }
+  .placeholder-box .ph-icon{ font-size:2.4rem; margin-bottom:12px; }
+  .placeholder-box h2{ margin:0 0 8px; font-size:1.15rem; color:var(--text); }
+  .placeholder-box p{ margin:0; color:var(--text2); font-size:0.9rem; }
+
+  /* ---------- sales (POS) ---------- */
+  .card{
+    background:var(--card);
+    border-radius:14px;
+    padding:16px;
+    box-shadow:0 2px 10px rgba(26,32,50,0.06);
+    margin-bottom:20px;
+  }
+  .card h3{ margin:0 0 12px; font-size:0.95rem; color:var(--text); }
+  .section-title{ font-size:1rem; color:var(--text2); font-weight:700; margin:2px 0 10px; }
+
+  .table-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(100px,1fr));
+    gap:10px;
+    margin-bottom:20px;
+  }
+  .table-tile{
+    border-radius:10px;
+    padding:12px 6px;
+    text-align:center;
+    cursor:pointer;
+    border:1.5px solid var(--border);
+    background:#fff;
+    font-size:0.85rem;
+    font-family:inherit;
+  }
+  .table-tile.occupied{ border-color:var(--warning); background:var(--warning-bg); }
+  .table-tile .tt-label{ font-weight:700; color:var(--text); }
+  .table-tile .tt-sub{ color:var(--text2); font-size:0.75rem; margin-top:2px; }
+  .table-tile.occupied .tt-sub{ color:var(--warning); font-weight:700; }
+
+  .back-btn{
+    padding:8px 14px;
+    background:#eef0f4;
+    color:var(--text);
+    border:none;
+    border-radius:8px;
+    font-size:0.86rem;
+    font-weight:600;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .pos-header{ display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+  .pos-header h3{ margin:0; font-size:1.05rem; color:var(--text); }
+
+  .pos-layout{ display:flex; gap:16px; flex-wrap:wrap-reverse; }
+  .pos-menu-grid{
+    flex:2 1 320px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(110px,1fr));
+    gap:10px;
+    align-content:start;
+  }
+  .menu-card{
+    position:relative;
+    background:#fff;
+    border:1.5px solid var(--border);
+    border-radius:12px;
+    padding:16px 6px;
+    text-align:center;
+    cursor:pointer;
+    min-height:80px;
+    font-family:inherit;
+  }
+  .menu-card:hover{ border-color:var(--accent); }
+  .menu-card .mc-name{ font-weight:700; font-size:0.85rem; color:var(--text); }
+  .menu-card .mc-price{ font-size:0.76rem; color:var(--text2); margin-top:4px; }
+  .menu-card .mc-badge{
+    position:absolute; top:-8px; right:-8px;
+    background:var(--accent); color:#fff;
+    width:24px; height:24px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:0.78rem; font-weight:700;
+  }
+  .cart-panel{
+    flex:1 1 240px;
+    background:#fff;
+    border-radius:12px;
+    padding:14px;
+    border:1px solid var(--border);
+    height:fit-content;
+  }
+  .cart-line{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px 0;
+    border-bottom:1px solid #f0f1f5;
+    gap:8px;
+  }
+  .cart-line:last-child{ border-bottom:none; }
+  .cl-name{ font-weight:600; font-size:0.88rem; color:var(--text); }
+  .cl-sub{ font-size:0.75rem; color:var(--text2); }
+  .cl-controls{ display:flex; align-items:center; gap:6px; flex-shrink:0; }
+  .qty-btn{
+    width:26px; height:26px;
+    border-radius:7px;
+    border:none;
+    background:var(--accent-bg);
+    color:var(--accent);
+    font-size:0.95rem;
+    font-weight:bold;
+    cursor:pointer;
+  }
+  .qty-btn:hover{ background:var(--accent); color:#fff; }
+  .qty-value{ min-width:18px; text-align:center; font-weight:600; }
+  .total-row{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:1.05rem; font-weight:700; color:var(--text);
+    padding-top:10px; margin-top:4px; border-top:1px solid var(--border);
+  }
+  .amount{ font-family:"Bai Jamjuree"; color:var(--accent); }
+  .amount::before{ content:"฿"; margin-right:1px; }
+  .btn-primary{
+    width:100%; padding:12px; margin-top:14px;
+    background:var(--text); color:#fff; border:none; border-radius:10px;
+    font-weight:700; font-size:0.95rem; cursor:pointer; font-family:inherit;
+  }
+  .btn-primary:hover{ background:var(--accent); }
+  .btn-primary:disabled{ background:#c7ccd6; cursor:not-allowed; }
+  .btn-csv{
+    background:#fff; border:1px solid #d7dbe3; color:var(--text);
+    padding:7px 14px; border-radius:8px; font-size:0.78rem; font-weight:600; font-family:inherit; cursor:pointer;
+  }
+  .toolbar-row{ display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
+
+  .payment-options{ display:flex; gap:10px; margin-bottom:14px; }
+  .pay-option{
+    flex:1; padding:12px; border-radius:10px; border:1.5px solid var(--border);
+    background:#fff; font-weight:700; cursor:pointer; color:var(--text); font-family:inherit;
+  }
+  .pay-option.selected{ border-color:var(--accent); background:var(--accent-bg); color:var(--accent); }
+
+  .empty-note{ text-align:center; color:var(--text2); font-size:0.88rem; padding:14px 0; }
+  .table-scroll{ overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; font-size:0.85rem; min-width:460px; }
+  thead th{ background:#f3f4f7; color:var(--text2); text-align:left; padding:9px 12px; font-weight:700; white-space:nowrap; }
+  tbody td{ padding:9px 12px; border-bottom:1px solid #eef0f4; color:var(--text); white-space:nowrap; }
+  .amount-cell{ text-align:right; font-family:"Bai Jamjuree"; font-weight:600; }
+  .amount-cell::before{ content:"฿"; margin-right:2px; color:var(--text2); font-weight:500; }
+
+  .pill{ display:inline-block; padding:3px 10px; border-radius:999px; font-size:0.72rem; font-weight:700; white-space:nowrap; }
+  .pill-success{ background:var(--success-bg); color:var(--success); }
+  .pill-warning{ background:var(--warning-bg); color:var(--warning); }
+  .pill-danger{ background:var(--danger-bg); color:var(--danger); }
+  .pill-muted{ background:#eef0f4; color:var(--text2); }
+
+  .stock-bar-bg{ background:#eef0f4; border-radius:999px; height:8px; width:90px; overflow:hidden; }
+  .stock-bar-fill{ height:100%; border-radius:999px; }
+
+  .msg{ min-height:1.1em; }
+
+  .staff-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:14px; margin-bottom:20px; }
+  .staff-card{
+    background:#fff; border-radius:14px; padding:16px; text-align:center;
+    box-shadow:0 2px 10px rgba(26,32,50,0.06); cursor:pointer; border:1.5px solid var(--border); font-family:inherit;
+  }
+  .staff-card:hover{ border-color:var(--accent); }
+  .avatar-circle{
+    width:56px; height:56px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:1.05rem; color:#fff; margin:0 auto 10px;
+    font-family:"Bai Jamjuree";
+  }
+  .staff-name{ font-weight:700; color:var(--text); font-size:0.92rem; margin-bottom:8px; }
+
+  .alert-bar{
+    background:#fff7ed; border:1px solid #fed7aa; color:#9a3412;
+    padding:11px 16px; border-radius:10px; font-size:0.86rem; font-weight:600; margin-bottom:18px;
+  }
+  .grid-cards{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:14px; margin-bottom:20px; }
+  .stat-card .stat-label{ font-size:0.8rem; color:var(--text2); font-weight:600; margin-bottom:8px; }
+  .stat-card .stat-value{ font-family:"Bai Jamjuree"; font-size:1.6rem; font-weight:700; color:var(--text); }
+  .stat-card .stat-value.money::before{ content:"฿"; margin-right:2px; }
+  .list-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:8px 0; border-bottom:1px solid #f0f1f5; font-size:0.88rem;
+  }
+  .list-row:last-child{ border-bottom:none; }
+  .rank{
+    display:inline-flex; width:20px; height:20px; border-radius:50%;
+    background:var(--accent-bg); color:var(--accent); font-size:0.72rem; font-weight:700;
+    align-items:center; justify-content:center; margin-right:8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<div class="app-shell">
+  <aside class="app-sidebar" id="appSidebar">
+    <div class="brand">☕ บีนส์</div>
+    <nav id="navList"></nav>
+  </aside>
+
+  <div class="app-main">
+    <div class="app-topbar">
+      <button type="button" class="hamburger" id="hamburgerBtn">☰</button>
+      <div class="page-title" id="pageTitle">แดชบอร์ด</div>
+      <div class="topbar-right"></div>
+    </div>
+    <div class="app-content" id="appContent"></div>
+  </div>
+</div>
+
+<script>
+  const MENU_ITEMS = [
+    { id: 'dashboard', icon: '📊', label: 'แดชบอร์ด' },
+    { id: 'sales', icon: '🛒', label: 'ขาย' },
+    { id: 'stock', icon: '📦', label: 'สต๊อก' },
+    { id: 'bom', icon: '🧾', label: 'สูตร BOM' },
+    { id: 'checkin', icon: '📸', label: 'เช็คอิน' }
+  ];
+
+  const STORAGE_KEY = 'beansERP';
+
+  const MENU = [
+    { id: 'americano', name: 'อเมริกาโน่', price: 55, unit: 'แก้ว' },
+    { id: 'latte', name: 'ลาเต้', price: 65, unit: 'แก้ว' },
+    { id: 'cappuccino', name: 'คาปูชิโน่', price: 65, unit: 'แก้ว' },
+    { id: 'thaitea', name: 'ชาไทย', price: 50, unit: 'แก้ว' },
+    { id: 'cocoa', name: 'โกโก้', price: 60, unit: 'แก้ว' },
+    { id: 'bananacake', name: 'เค้กกล้วยหอม', price: 45, unit: 'ชิ้น' }
+  ];
+
+  const STAFF = [
+    { id: 'mind', name: 'มายด์', color: '#2563eb' },
+    { id: 'boss', name: 'บอส', color: '#d97706' },
+    { id: 'nan', name: 'แนน', color: '#16a34a' }
+  ];
+
+  const STOCK_SEED = [
+    { id: 'coffee_bean', name: 'เมล็ดกาแฟ', unit: 'g', qty: 2000, initQty: 2000 },
+    { id: 'milk', name: 'นมสด', unit: 'ml', qty: 6000, initQty: 6000 },
+    { id: 'cocoa_powder', name: 'ผงโกโก้', unit: 'g', qty: 500, initQty: 500 },
+    { id: 'thai_tea', name: 'ชาไทย', unit: 'g', qty: 500, initQty: 500 },
+    { id: 'cup', name: 'แก้ว/บรรจุภัณฑ์', unit: 'ใบ', qty: 100, initQty: 100 }
+  ];
+
+  const BOM = {
+    americano: [{ stockId: 'coffee_bean', qty: 18 }, { stockId: 'cup', qty: 1 }],
+    latte: [{ stockId: 'coffee_bean', qty: 18 }, { stockId: 'milk', qty: 150 }, { stockId: 'cup', qty: 1 }],
+    cappuccino: [{ stockId: 'coffee_bean', qty: 18 }, { stockId: 'milk', qty: 120 }, { stockId: 'cup', qty: 1 }],
+    thaitea: [{ stockId: 'thai_tea', qty: 15 }, { stockId: 'milk', qty: 100 }, { stockId: 'cup', qty: 1 }],
+    cocoa: [{ stockId: 'cocoa_powder', qty: 20 }, { stockId: 'milk', qty: 150 }, { stockId: 'cup', qty: 1 }],
+    bananacake: [{ stockId: 'cup', qty: 1 }]
+  };
+
+  function seedIfMissing(){
+    if (localStorage.getItem(STORAGE_KEY)) return;
+    const initialData = {
+      orders: [],
+      stock: STOCK_SEED.map(s => ({ ...s })),
+      checkins: []
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(initialData));
+  }
+
+  function getData(){
+    return JSON.parse(localStorage.getItem(STORAGE_KEY));
+  }
+  function saveData(data){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  seedIfMissing();
+
+  const TABLE_IDS = ['1','2','3','4','5','6','7','8'];
+
+  function formatMoney(n){ return n.toLocaleString('th-TH'); }
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+  function getMenuItem(menuId){ return MENU.find(m => m.id === menuId); }
+
+  function calcOrderTotal(order){
+    return order.items.reduce((sum, it) => sum + getMenuItem(it.menuId).price * it.qty, 0);
+  }
+
+  function findOrderInData(data, session){
+    if (!session) return null;
+    if (session.type === 'table') return data.orders.find(o => o.status === 'open' && o.source === 'pos' && o.table === session.table);
+    if (session.type === 'takeaway') return data.orders.find(o => o.id === session.orderId);
+    return null;
+  }
+
+  function getSessionOrder(session){
+    return findOrderInData(getData(), session);
+  }
+
+  function getSessionLabel(session, data){
+    if (!session) return '';
+    if (session.type === 'table') return `โต๊ะ ${session.table}`;
+    if (session.type === 'takeaway-new') return 'กลับบ้าน';
+    const openTakeaway = (data || getData()).orders
+      .filter(o => o.status === 'open' && o.source === 'pos' && o.table === 'กลับบ้าน')
+      .sort((a, b) => a.createdAt - b.createdAt);
+    const idx = openTakeaway.findIndex(o => o.id === session.orderId);
+    return `กลับบ้าน #${idx + 1}`;
+  }
+
+  function addItemToSession(session, menuId){
+    const data = getData();
+    let order = findOrderInData(data, session);
+    if (!order){
+      order = {
+        id: Date.now(),
+        source: 'pos',
+        table: session.type === 'table' ? session.table : 'กลับบ้าน',
+        customer: null,
+        items: [],
+        total: 0,
+        status: 'open',
+        createdAt: Date.now(),
+        paidAt: null,
+        payMethod: null
+      };
+      data.orders.push(order);
+      if (session.type === 'takeaway-new'){
+        session.type = 'takeaway';
+        session.orderId = order.id;
+      }
+    }
+    const line = order.items.find(it => it.menuId === menuId);
+    if (line) line.qty += 1;
+    else order.items.push({ menuId, qty: 1 });
+    order.total = calcOrderTotal(order);
+    saveData(data);
+  }
+
+  function changeItemQty(session, menuId, delta){
+    const data = getData();
+    const order = findOrderInData(data, session);
+    if (!order) return;
+    const line = order.items.find(it => it.menuId === menuId);
+    if (!line) return;
+    line.qty += delta;
+    if (line.qty <= 0) order.items = order.items.filter(it => it.menuId !== menuId);
+    if (order.items.length === 0){
+      data.orders = data.orders.filter(o => o.id !== order.id);
+    } else {
+      order.total = calcOrderTotal(order);
+    }
+    saveData(data);
+  }
+
+  function deductStockForOrder(data, order){
+    const shortages = [];
+    order.items.forEach(it => {
+      const recipe = BOM[it.menuId] || [];
+      recipe.forEach(ing => {
+        const stockItem = data.stock.find(s => s.id === ing.stockId);
+        const needed = ing.qty * it.qty;
+        if (stockItem.qty < needed){
+          shortages.push(`${stockItem.name} ขาด ${formatMoney(needed - stockItem.qty)} ${stockItem.unit}`);
+        }
+        stockItem.qty = Math.max(0, stockItem.qty - needed);
+      });
+    });
+    return shortages;
+  }
+
+  function payOrder(session, payMethod){
+    const data = getData();
+    const order = findOrderInData(data, session);
+    if (!order) return [];
+    order.status = 'paid';
+    order.paidAt = Date.now();
+    order.payMethod = payMethod;
+    const shortages = deductStockForOrder(data, order);
+    saveData(data);
+    return shortages;
+  }
+
+  function getTodayPaidOrders(){
+    const todayStr = new Date().toDateString();
+    return getData().orders.filter(o => o.status === 'paid' && o.paidAt && new Date(o.paidAt).toDateString() === todayStr);
+  }
+
+  const state = {
+    activeMenu: 'dashboard',
+    sales: { view: 'floor', session: null },
+    checkin: { staffId: null, photo: null }
+  };
+  let checkinStream = null;
+
+  const navListEl = document.getElementById('navList');
+  const pageTitleEl = document.getElementById('pageTitle');
+  const appContentEl = document.getElementById('appContent');
+  const appSidebarEl = document.getElementById('appSidebar');
+  const sidebarBackdropEl = document.getElementById('sidebarBackdrop');
+  const hamburgerBtn = document.getElementById('hamburgerBtn');
+
+  function renderNav(){
+    navListEl.innerHTML = MENU_ITEMS.map(item => `
+      <button type="button" class="nav-item ${item.id === state.activeMenu ? 'active' : ''}" data-menu="${item.id}">
+        <span>${item.icon}</span><span>${item.label}</span>
+      </button>
+    `).join('');
+  }
+
+  function closeSidebar(){
+    appSidebarEl.classList.remove('open');
+    sidebarBackdropEl.classList.remove('open');
+  }
+
+  navListEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.nav-item');
+    if (!btn) return;
+    stopCheckinCamera();
+    state.activeMenu = btn.dataset.menu;
+    if (state.activeMenu === 'sales') state.sales = { view: 'floor', session: null };
+    if (state.activeMenu === 'checkin') state.checkin = { staffId: null, photo: null };
+    closeSidebar();
+    render();
+  });
+
+  hamburgerBtn.addEventListener('click', () => {
+    appSidebarEl.classList.add('open');
+    sidebarBackdropEl.classList.add('open');
+  });
+  sidebarBackdropEl.addEventListener('click', closeSidebar);
+
+  function placeholderView(icon, label, note){
+    return `
+      <div class="placeholder-box">
+        <div class="ph-icon">${icon}</div>
+        <h2>${label}</h2>
+        <p>${note}</p>
+      </div>
+    `;
+  }
+
+  const PLACEHOLDER_NOTES = {};
+
+  function renderContent(){
+    const item = MENU_ITEMS.find(m => m.id === state.activeMenu);
+    pageTitleEl.textContent = item.label;
+    if (state.activeMenu === 'dashboard'){ renderDashboardView(); return; }
+    if (state.activeMenu === 'sales'){ renderSalesView(); return; }
+    if (state.activeMenu === 'stock'){ renderStockView(); return; }
+    if (state.activeMenu === 'bom'){ renderBomView(); return; }
+    if (state.activeMenu === 'checkin'){ renderCheckinView(); return; }
+    appContentEl.innerHTML = placeholderView(item.icon, item.label, PLACEHOLDER_NOTES[item.id] || 'ยังไม่มีเนื้อหา');
+  }
+
+  // ---------- dashboard view ----------
+  function getPaidOrdersWithinDays(days){
+    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+    return getData().orders.filter(o => o.status === 'paid' && o.paidAt && o.paidAt >= cutoff);
+  }
+
+  function renderDashboardView(){
+    const data = getData();
+    const todayPaid = getTodayPaidOrders();
+    const salesToday = todayPaid.reduce((sum, o) => sum + o.total, 0);
+    const billCount = todayPaid.length;
+    const openTables = data.orders.filter(o => o.status === 'open' && o.source === 'pos' && o.table !== 'กลับบ้าน');
+
+    // best sellers 7 days
+    const countMap = {};
+    getPaidOrdersWithinDays(7).forEach(o => o.items.forEach(it => {
+      countMap[it.menuId] = (countMap[it.menuId] || 0) + it.qty;
+    }));
+    const topSellers = Object.entries(countMap).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    const topSellersHtml = topSellers.length === 0
+      ? '<div class="empty-note">ยังไม่มีข้อมูลการขาย</div>'
+      : topSellers.map(([menuId, count], idx) => {
+          const m = getMenuItem(menuId);
+          return `<div class="list-row"><span><span class="rank">${idx + 1}</span>${escapeHtml(m.name)}</span><strong>${formatMoney(count)} ${m.unit}</strong></div>`;
+        }).join('');
+
+    // stock warnings (yellow/red = below 50%)
+    const warnStock = data.stock
+      .map(s => ({ ...s, pct: s.initQty > 0 ? Math.round((s.qty / s.initQty) * 100) : 0 }))
+      .filter(s => s.pct < 50)
+      .sort((a, b) => a.pct - b.pct);
+    const warnStockHtml = warnStock.length === 0
+      ? '<div class="empty-note">วัตถุดิบทุกอย่างเพียงพอ</div>'
+      : warnStock.map(s => {
+          const st = stockStatus(s.pct);
+          return `<div class="list-row"><span>${escapeHtml(s.name)}</span><span class="pill ${st.pillClass}">${s.pct}% ${st.label}</span></div>`;
+        }).join('');
+
+    // who is working today
+    const staffTodayHtml = STAFF.map(s => {
+      const last = lastCheckinToday(s.id);
+      let statusHtml, photoHtml;
+      if (!last){
+        statusHtml = '<span class="pill pill-muted">ยังไม่มา</span>';
+        photoHtml = `<div class="avatar-circle" style="width:32px; height:32px; font-size:0.68rem; margin:0; background:#c7ccd6;">${s.name.slice(0,2)}</div>`;
+      } else {
+        statusHtml = last.type === 'in'
+          ? `<span class="pill pill-success">เข้า ${formatTime(last.time)}</span>`
+          : `<span class="pill pill-muted">ออก ${formatTime(last.time)}</span>`;
+        photoHtml = last.photo
+          ? `<img src="${last.photo}" alt="" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">`
+          : `<div class="avatar-circle" style="width:32px; height:32px; font-size:0.68rem; margin:0; background:${s.color};">${s.name.slice(0,2)}</div>`;
+      }
+      return `<div class="list-row"><span style="display:flex; align-items:center; gap:8px;">${photoHtml}${escapeHtml(s.name)}</span>${statusHtml}</div>`;
+    }).join('');
+
+    // urgent alert bar (red stock < 20%)
+    const redStock = data.stock
+      .map(s => ({ ...s, pct: s.initQty > 0 ? Math.round((s.qty / s.initQty) * 100) : 0 }))
+      .filter(s => s.pct < 20);
+    const alertHtml = redStock.length > 0
+      ? `<div class="alert-bar">⚠️ วัตถุดิบใกล้หมด: ${redStock.map(s => `${escapeHtml(s.name)} เหลือ ${s.pct}%`).join(' · ')} — ควรรับของเข้าด่วน</div>`
+      : '';
+
+    appContentEl.innerHTML = `
+      ${alertHtml}
+      <div class="grid-cards">
+        <div class="card stat-card">
+          <div class="stat-label">ยอดขายวันนี้</div>
+          <div class="stat-value money">${formatMoney(salesToday)}</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label">จำนวนบิลวันนี้</div>
+          <div class="stat-value">${formatMoney(billCount)} บิล</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label">โต๊ะที่ค้างบิล</div>
+          <div class="stat-value">${formatMoney(openTables.length)} โต๊ะ</div>
+        </div>
+      </div>
+
+      <div class="grid-cards">
+        <div class="card">
+          <h3>เมนูขายดี 3 อันดับ (7 วัน)</h3>
+          ${topSellersHtml}
+        </div>
+        <div class="card">
+          <h3>วัตถุดิบต้องระวัง</h3>
+          ${warnStockHtml}
+        </div>
+        <div class="card">
+          <h3>ใครเข้างานวันนี้</h3>
+          ${staffTodayHtml}
+        </div>
+      </div>
+    `;
+  }
+
+  // ---------- stock view ----------
+  function stockStatus(pct){
+    if (pct < 20) return { pillClass: 'pill-danger', label: 'ใกล้หมด', barColor: 'var(--danger)' };
+    if (pct < 50) return { pillClass: 'pill-warning', label: 'เหลือน้อย', barColor: 'var(--warning)' };
+    return { pillClass: 'pill-success', label: 'ปกติ', barColor: 'var(--success)' };
+  }
+
+  function renderStockView(){
+    const data = getData();
+    const rows = data.stock.map(s => {
+      const pct = s.initQty > 0 ? Math.round((s.qty / s.initQty) * 100) : 0;
+      const st = stockStatus(pct);
+      return `
+        <tr>
+          <td>${escapeHtml(s.name)}</td>
+          <td>${formatMoney(s.qty)} ${s.unit}</td>
+          <td>${formatMoney(s.initQty)} ${s.unit}</td>
+          <td><div class="stock-bar-bg"><div class="stock-bar-fill" style="width:${Math.min(pct,100)}%; background:${st.barColor};"></div></div></td>
+          <td><span class="pill ${st.pillClass}">${pct}% ${st.label}</span></td>
+        </tr>
+      `;
+    }).join('');
+
+    const optionsHtml = data.stock.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+
+    appContentEl.innerHTML = `
+      <div class="card">
+        <h3>รายการวัตถุดิบ</h3>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>วัตถุดิบ</th><th>คงเหลือ</th><th>ตั้งต้น</th><th>สัดส่วนคงเหลือ</th><th>สถานะ</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        <div class="toolbar-row"><button type="button" class="btn-csv" id="stockCsvBtn">⬇ ออกรายงาน CSV</button></div>
+      </div>
+
+      <div class="card">
+        <h3>รับของเข้า</h3>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+          <div style="flex:1; min-width:160px;">
+            <label style="display:block; font-size:0.85rem; color:var(--text2); margin-bottom:4px; font-weight:600;">วัตถุดิบ</label>
+            <select id="restockSelect" style="width:100%; padding:9px; border-radius:8px; border:1px solid var(--border);">${optionsHtml}</select>
+          </div>
+          <div style="width:140px;">
+            <label style="display:block; font-size:0.85rem; color:var(--text2); margin-bottom:4px; font-weight:600;">จำนวนที่รับเข้า</label>
+            <input type="number" id="restockQty" min="1" placeholder="เช่น 500" style="width:100%; padding:9px; border-radius:8px; border:1px solid var(--border);">
+          </div>
+          <button type="button" class="btn-primary" id="restockBtn" style="width:auto; margin-top:0;">+ เพิ่มเข้าสต๊อก</button>
+        </div>
+        <div class="msg" id="restockMsg" style="margin-top:8px; font-size:0.85rem;"></div>
+      </div>
+    `;
+
+    document.getElementById('stockCsvBtn').addEventListener('click', () => {
+      downloadCsv(
+        `สต๊อก_${new Date().toLocaleDateString('th-TH').replace(/\//g, '-')}.csv`,
+        ['วัตถุดิบ', 'คงเหลือ', 'หน่วย', 'ตั้งต้น', 'สัดส่วนคงเหลือ (%)'],
+        data.stock.map(s => [s.name, s.qty, s.unit, s.initQty, s.initQty > 0 ? Math.round((s.qty / s.initQty) * 100) : 0])
+      );
+    });
+
+    document.getElementById('restockBtn').addEventListener('click', () => {
+      const msgEl = document.getElementById('restockMsg');
+      const stockId = document.getElementById('restockSelect').value;
+      const qtyInput = document.getElementById('restockQty');
+      const amount = Number(qtyInput.value);
+      if (!amount || amount <= 0){
+        msgEl.style.color = 'var(--danger)';
+        msgEl.textContent = 'กรุณากรอกจำนวนที่รับเข้าให้ถูกต้อง (มากกว่า 0)';
+        return;
+      }
+      const freshData = getData();
+      const stockItem = freshData.stock.find(s => s.id === stockId);
+      stockItem.qty += amount;
+      saveData(freshData);
+      renderStockView();
+    });
+  }
+
+  // ---------- BOM view ----------
+  function renderBomView(){
+    const stockNameMap = {};
+    getData().stock.forEach(s => { stockNameMap[s.id] = s; });
+
+    const rows = MENU.map(item => {
+      const recipe = BOM[item.id] || [];
+      const ingredientsText = recipe.map(ing => {
+        const s = stockNameMap[ing.stockId];
+        return `${s.name} ${formatMoney(ing.qty)} ${s.unit}`;
+      }).join(' · ');
+      return `<tr><td>${escapeHtml(item.name)}</td><td>${ingredientsText}</td><td>ยังไม่ตั้งราคาต้นทุน</td></tr>`;
+    }).join('');
+
+    appContentEl.innerHTML = `
+      <div class="card">
+        <h3>สูตรต่อ 1 หน่วยขาย</h3>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>เมนู</th><th>ส่วนผสมที่ใช้</th><th>ต้นทุนโดยประมาณ</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        <div class="toolbar-row"><button type="button" class="btn-csv" id="bomCsvBtn">⬇ ออกรายงาน CSV</button></div>
+      </div>
+    `;
+
+    document.getElementById('bomCsvBtn').addEventListener('click', () => {
+      downloadCsv(
+        'สูตร_BOM.csv',
+        ['เมนู', 'ส่วนผสมที่ใช้', 'ต้นทุนโดยประมาณ'],
+        MENU.map(item => {
+          const recipe = BOM[item.id] || [];
+          const ingredientsText = recipe.map(ing => {
+            const s = stockNameMap[ing.stockId];
+            return `${s.name} ${ing.qty}${s.unit}`;
+          }).join(' | ');
+          return [item.name, ingredientsText, 'ยังไม่ตั้งราคาต้นทุน'];
+        })
+      );
+    });
+  }
+
+  // ---------- check-in view ----------
+  function stopCheckinCamera(){
+    if (checkinStream){
+      checkinStream.getTracks().forEach(t => t.stop());
+      checkinStream = null;
+    }
+  }
+
+  function getStaff(staffId){ return STAFF.find(s => s.id === staffId); }
+
+  function todayCheckins(){
+    const todayStr = new Date().toDateString();
+    return getData().checkins.filter(c => new Date(c.time).toDateString() === todayStr);
+  }
+
+  function lastCheckinToday(staffId){
+    const list = todayCheckins().filter(c => c.staffId === staffId).sort((a, b) => a.time - b.time);
+    return list.length ? list[list.length - 1] : null;
+  }
+
+  function saveCheckin(staffId, type, photo){
+    const data = getData();
+    data.checkins.push({ id: Date.now(), staffId, time: Date.now(), type, photo: photo || null });
+    saveData(data);
+  }
+
+  function renderCheckinView(){
+    stopCheckinCamera();
+    const staffButtonsHtml = STAFF.map(s => {
+      const last = lastCheckinToday(s.id);
+      let statusHtml;
+      if (!last) statusHtml = '<span class="pill pill-muted">ยังไม่เช็คอิน</span>';
+      else if (last.type === 'in') statusHtml = `<span class="pill pill-success">เข้างาน ${formatTime(last.time)}</span>`;
+      else statusHtml = `<span class="pill pill-muted">ออกงาน ${formatTime(last.time)}</span>`;
+      const initials = s.name.slice(0, 2);
+      return `
+        <button type="button" class="staff-card" data-staff="${s.id}">
+          <div class="avatar-circle" style="background:${s.color};">${initials}</div>
+          <div class="staff-name">${escapeHtml(s.name)}</div>
+          ${statusHtml}
+        </button>
+      `;
+    }).join('');
+
+    const history = todayCheckins().sort((a, b) => b.time - a.time);
+    const historyRows = history.length === 0
+      ? `<tr><td colspan="4"><div class="empty-note">ยังไม่มีการเช็คอินวันนี้</div></td></tr>`
+      : history.map(c => {
+          const s = getStaff(c.staffId);
+          const photoCell = c.photo
+            ? `<img src="${c.photo}" alt="" style="width:34px; height:34px; border-radius:8px; object-fit:cover;">`
+            : `<div class="avatar-circle" style="width:34px; height:34px; font-size:0.7rem; margin:0; background:${s.color};">${s.name.slice(0,2)}</div>`;
+          const typePill = c.type === 'in' ? '<span class="pill pill-success">เข้างาน</span>' : '<span class="pill pill-muted">ออกงาน</span>';
+          return `<tr><td>${photoCell}</td><td>${escapeHtml(s.name)}</td><td>${formatTime(c.time)}</td><td>${typePill}</td></tr>`;
+        }).join('');
+
+    appContentEl.innerHTML = `
+      <div class="section-title">เลือกพนักงานเพื่อเช็คอิน</div>
+      <div class="staff-grid">${staffButtonsHtml}</div>
+      <div id="checkinCameraArea"></div>
+      <div class="card">
+        <h3>ประวัติวันนี้</h3>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>รูป</th><th>ชื่อ</th><th>เวลา</th><th>ประเภท</th></tr></thead>
+            <tbody>${historyRows}</tbody>
+          </table>
+        </div>
+        <div class="toolbar-row"><button type="button" class="btn-csv" id="checkinCsvBtn">⬇ ออกรายงาน CSV</button></div>
+      </div>
+    `;
+
+    appContentEl.querySelectorAll('.staff-card').forEach(btn => {
+      btn.addEventListener('click', () => openCheckinCamera(btn.dataset.staff));
+    });
+
+    document.getElementById('checkinCsvBtn').addEventListener('click', () => {
+      downloadCsv(
+        `เช็คอิน_${new Date().toLocaleDateString('th-TH').replace(/\//g, '-')}.csv`,
+        ['ชื่อ', 'เวลา', 'ประเภท', 'มีรูป'],
+        history.map(c => [getStaff(c.staffId).name, formatTime(c.time), c.type === 'in' ? 'เข้างาน' : 'ออกงาน', c.photo ? 'มี' : 'ไม่มี'])
+      );
+    });
+  }
+
+  function formatTime(ts){
+    return new Date(ts).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  async function openCheckinCamera(staffId){
+    stopCheckinCamera(); // ปิดกล้องของพนักงานคนก่อนหน้าถ้ายังเปิดค้างอยู่ (กันกล้องค้าง)
+    const staff = getStaff(staffId);
+    const last = lastCheckinToday(staffId);
+    const nextType = (last && last.type === 'in') ? 'out' : 'in';
+    const nextLabel = nextType === 'in' ? 'เข้างาน' : 'ออกงาน';
+    const area = document.getElementById('checkinCameraArea');
+
+    area.innerHTML = `
+      <div class="card" id="cameraCard">
+        <h3>เช็คอิน: ${escapeHtml(staff.name)} — ${nextLabel}</h3>
+        <div id="cameraStatus" class="empty-note">กำลังเปิดกล้อง...</div>
+        <video id="cameraVideo" autoplay playsinline style="display:none; width:100%; max-width:320px; border-radius:12px; background:#000;"></video>
+        <canvas id="cameraCanvas" style="display:none;"></canvas>
+        <div class="toolbar-row" style="justify-content:flex-start; flex-wrap:wrap;">
+          <button type="button" class="btn-primary" id="captureBtn" style="width:auto; margin-top:0; display:none;">📸 ถ่ายรูปและบันทึก ${nextLabel}</button>
+          <button type="button" class="btn-primary" id="noCameraBtn" style="width:auto; margin-top:0; display:none; background:var(--warning);">บันทึก ${nextLabel} แบบไม่มีรูป</button>
+          <button type="button" class="back-btn" id="cameraCancelBtn">ยกเลิก</button>
+        </div>
+      </div>
+    `;
+    area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    const statusEl = document.getElementById('cameraStatus');
+    const video = document.getElementById('cameraVideo');
+    const captureBtn = document.getElementById('captureBtn');
+    const noCameraBtn = document.getElementById('noCameraBtn');
+
+    document.getElementById('cameraCancelBtn').addEventListener('click', () => {
+      stopCheckinCamera();
+      area.innerHTML = '';
+    });
+
+    function finalize(photo){
+      stopCheckinCamera();
+      saveCheckin(staffId, nextType, photo);
+      renderCheckinView();
+    }
+
+    noCameraBtn.addEventListener('click', () => finalize(null));
+
+    let cameraOk = false;
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+        throw new Error('no-getusermedia');
+      }
+      checkinStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      video.srcObject = checkinStream;
+      video.style.display = 'block';
+      statusEl.style.display = 'none';
+      captureBtn.style.display = 'inline-block';
+      cameraOk = true;
+    } catch (err) {
+      statusEl.style.color = 'var(--warning)';
+      statusEl.textContent = 'เปิดกล้องไม่ได้ (กล้องจะใช้ได้เมื่อระบบขึ้นเว็บจริง https) — เช็คอินแบบไม่มีรูปได้';
+      noCameraBtn.style.display = 'inline-block';
+    }
+
+    if (cameraOk){
+      captureBtn.addEventListener('click', () => {
+        const canvas = document.getElementById('cameraCanvas');
+        const w = video.videoWidth || 320;
+        const h = video.videoHeight || 240;
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(video, 0, 0, w, h);
+        const photo = canvas.toDataURL('image/jpeg', 0.6);
+        finalize(photo);
+      });
+    }
+  }
+
+  // ---------- sales (POS) views ----------
+  function renderSalesView(){
+    if (state.sales.view === 'floor') return renderSalesFloor();
+    if (state.sales.view === 'order') return renderSalesOrder();
+    if (state.sales.view === 'checkout') return renderSalesCheckout();
+  }
+
+  function openSalesSession(session){
+    state.sales.session = session;
+    state.sales.view = 'order';
+    renderSalesView();
+  }
+
+  function renderSalesFloor(){
+    const data = getData();
+    let tableTilesHtml = TABLE_IDS.map(id => {
+      const order = data.orders.find(o => o.status === 'open' && o.source === 'pos' && o.table === id);
+      const occupied = !!order;
+      const total = occupied ? order.total : 0;
+      return `
+        <button type="button" class="table-tile ${occupied ? 'occupied' : ''}" data-session-type="table" data-table="${id}">
+          <div class="tt-label">โต๊ะ ${id}</div>
+          <div class="tt-sub">${occupied ? '฿' + formatMoney(total) : 'ว่าง'}</div>
+        </button>
+      `;
+    }).join('');
+
+    const openTakeaway = data.orders
+      .filter(o => o.status === 'open' && o.source === 'pos' && o.table === 'กลับบ้าน')
+      .sort((a, b) => a.createdAt - b.createdAt);
+    openTakeaway.forEach((order, idx) => {
+      tableTilesHtml += `
+        <button type="button" class="table-tile occupied" data-session-type="takeaway" data-order-id="${order.id}">
+          <div class="tt-label">กลับบ้าน #${idx + 1}</div>
+          <div class="tt-sub">฿${formatMoney(order.total)}</div>
+        </button>
+      `;
+    });
+    tableTilesHtml += `
+      <button type="button" class="table-tile" data-session-type="takeaway-new">
+        <div class="tt-label">+ กลับบ้าน</div>
+        <div class="tt-sub">ออเดอร์ใหม่</div>
+      </button>
+    `;
+
+    const todayOrders = getTodayPaidOrders().sort((a, b) => b.paidAt - a.paidAt);
+    const historyRows = todayOrders.length === 0
+      ? `<tr><td colspan="5"><div class="empty-note">ยังไม่มีบิลวันนี้</div></td></tr>`
+      : todayOrders.map(o => {
+          const itemsText = o.items.map(it => `${getMenuItem(it.menuId).name} x${it.qty}`).join(', ');
+          const timeStr = new Date(o.paidAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+          return `<tr><td>${timeStr}</td><td>${o.table === 'กลับบ้าน' ? 'กลับบ้าน' : 'โต๊ะ ' + o.table}</td><td>${escapeHtml(itemsText)}</td><td>${o.payMethod === 'cash' ? 'เงินสด' : 'โอน'}</td><td class="amount-cell">${formatMoney(o.total)}</td></tr>`;
+        }).join('');
+
+    appContentEl.innerHTML = `
+      <div class="section-title">เลือกโต๊ะ</div>
+      <div class="table-grid">${tableTilesHtml}</div>
+      <div class="card">
+        <h3>ประวัติบิลวันนี้</h3>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>เวลา</th><th>โต๊ะ</th><th>รายการ</th><th>ชำระ</th><th>ยอดรวม</th></tr></thead>
+            <tbody>${historyRows}</tbody>
+          </table>
+        </div>
+        <div class="toolbar-row"><button type="button" class="btn-csv" id="salesCsvBtn">⬇ ออกรายงาน CSV</button></div>
+      </div>
+    `;
+
+    appContentEl.querySelectorAll('.table-tile').forEach(tile => {
+      tile.addEventListener('click', () => {
+        const type = tile.dataset.sessionType;
+        if (type === 'table') openSalesSession({ type: 'table', table: tile.dataset.table });
+        else if (type === 'takeaway') openSalesSession({ type: 'takeaway', orderId: Number(tile.dataset.orderId) });
+        else openSalesSession({ type: 'takeaway-new' });
+      });
+    });
+
+    const csvBtn = document.getElementById('salesCsvBtn');
+    if (csvBtn) csvBtn.addEventListener('click', () => exportCsv(todayOrders));
+  }
+
+  function downloadCsv(filename, headerCols, dataRows){
+    const escapeCell = v => `"${String(v).replace(/"/g, '""')}"`;
+    const lines = [headerCols.map(escapeCell).join(',')]
+      .concat(dataRows.map(row => row.map(escapeCell).join(',')));
+    const csv = '﻿' + lines.join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportCsv(orders){
+    const rows = orders.map(o => {
+      const itemsText = o.items.map(it => `${getMenuItem(it.menuId).name} x${it.qty}`).join(' | ');
+      const timeStr = new Date(o.paidAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+      const table = o.table === 'กลับบ้าน' ? 'กลับบ้าน' : 'โต๊ะ ' + o.table;
+      return [timeStr, table, itemsText, o.payMethod === 'cash' ? 'เงินสด' : 'โอน', o.total];
+    });
+    downloadCsv(
+      `ประวัติบิลวันนี้_${new Date().toLocaleDateString('th-TH').replace(/\//g, '-')}.csv`,
+      ['เวลา', 'โต๊ะ', 'รายการ', 'ชำระ', 'ยอดรวม'],
+      rows
+    );
+  }
+
+  function renderSalesOrder(){
+    const session = state.sales.session;
+    const order = getSessionOrder(session);
+    const items = order ? order.items : [];
+    const total = order ? order.total : 0;
+
+    const menuCardsHtml = MENU.map(item => {
+      const line = items.find(it => it.menuId === item.id);
+      const qty = line ? line.qty : 0;
+      return `
+        <button type="button" class="menu-card" data-menu-id="${item.id}">
+          ${qty > 0 ? `<span class="mc-badge">${qty}</span>` : ''}
+          <div class="mc-name">${item.name}</div>
+          <div class="mc-price">${item.price} บาท</div>
+        </button>
+      `;
+    }).join('');
+
+    const cartHtml = items.length === 0
+      ? '<div class="empty-note">ยังไม่มีรายการ แตะเมนูเพื่อเพิ่ม</div>'
+      : items.map(it => {
+          const m = getMenuItem(it.menuId);
+          return `
+            <div class="cart-line" data-menu-id="${it.menuId}">
+              <div>
+                <div class="cl-name">${escapeHtml(m.name)}</div>
+                <div class="cl-sub">${m.price} บาท x ${it.qty} = ฿${formatMoney(m.price * it.qty)}</div>
+              </div>
+              <div class="cl-controls">
+                <button type="button" class="qty-btn" data-action="dec">−</button>
+                <span class="qty-value">${it.qty}</span>
+                <button type="button" class="qty-btn" data-action="inc">+</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+    appContentEl.innerHTML = `
+      <div class="pos-header">
+        <button type="button" class="back-btn" id="salesBackBtn">← กลับ</button>
+        <h3>${getSessionLabel(session)}</h3>
+      </div>
+      <div class="pos-layout">
+        <div class="pos-menu-grid">${menuCardsHtml}</div>
+        <div class="cart-panel">
+          <h3>ตะกร้าปัจจุบัน</h3>
+          <div id="salesCartList">${cartHtml}</div>
+          <div class="total-row"><span>ยอดรวม</span><span class="amount">${formatMoney(total)}</span></div>
+          <button type="button" class="btn-primary" id="salesCheckoutBtn" ${items.length === 0 ? 'disabled' : ''}>เช็คบิล</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('salesBackBtn').addEventListener('click', () => {
+      state.sales.view = 'floor';
+      renderSalesView();
+    });
+
+    appContentEl.querySelectorAll('.menu-card').forEach(card => {
+      card.addEventListener('click', () => {
+        addItemToSession(session, card.dataset.menuId);
+        renderSalesOrder();
+      });
+    });
+
+    appContentEl.querySelectorAll('.cart-line .qty-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const line = btn.closest('.cart-line');
+        const delta = btn.dataset.action === 'inc' ? 1 : -1;
+        changeItemQty(session, line.dataset.menuId, delta);
+        renderSalesOrder();
+      });
+    });
+
+    const checkoutBtn = document.getElementById('salesCheckoutBtn');
+    checkoutBtn.addEventListener('click', () => {
+      if (items.length === 0) return;
+      state.sales.view = 'checkout';
+      renderSalesView();
+    });
+  }
+
+  function renderSalesCheckout(){
+    const session = state.sales.session;
+    const order = getSessionOrder(session);
+    if (!order){
+      state.sales.view = 'floor';
+      renderSalesView();
+      return;
+    }
+
+    const itemsHtml = order.items.map(it => {
+      const m = getMenuItem(it.menuId);
+      return `<li>${escapeHtml(m.name)} x${it.qty} = ฿${formatMoney(m.price * it.qty)}</li>`;
+    }).join('');
+
+    appContentEl.innerHTML = `
+      <div class="pos-header">
+        <button type="button" class="back-btn" id="checkoutBackBtn">← กลับ</button>
+        <h3>เช็คบิล — ${getSessionLabel(session)}</h3>
+      </div>
+      <div class="card">
+        <h3>รายการ</h3>
+        <ul style="margin:0 0 6px; padding-left:18px; font-size:0.9rem;">${itemsHtml}</ul>
+        <div class="total-row"><span>ยอดรวม</span><span class="amount">${formatMoney(order.total)}</span></div>
+      </div>
+      <div class="card">
+        <h3>วิธีชำระเงิน</h3>
+        <div class="payment-options" id="paymentOptions">
+          <button type="button" class="pay-option" data-method="cash">💵 เงินสด</button>
+          <button type="button" class="pay-option" data-method="transfer">📱 โอน</button>
+        </div>
+        <button type="button" class="btn-primary" id="confirmPayBtn" disabled>ยืนยันชำระเงิน</button>
+      </div>
+    `;
+
+    document.getElementById('checkoutBackBtn').addEventListener('click', () => {
+      state.sales.view = 'order';
+      renderSalesView();
+    });
+
+    let selectedMethod = null;
+    const confirmBtn = document.getElementById('confirmPayBtn');
+    document.getElementById('paymentOptions').addEventListener('click', (e) => {
+      const btn = e.target.closest('.pay-option');
+      if (!btn) return;
+      document.querySelectorAll('.pay-option').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedMethod = btn.dataset.method;
+      confirmBtn.disabled = false;
+    });
+
+    confirmBtn.addEventListener('click', () => {
+      if (!selectedMethod) return;
+      const shortages = payOrder(session, selectedMethod);
+      state.sales.view = 'floor';
+      state.sales.session = null;
+      renderSalesView();
+      if (shortages.length > 0){
+        alert('⚠️ วัตถุดิบไม่พอสำหรับบิลนี้ ระบบตัดให้เหลือ 0 แล้ว กรุณารับของเข้าเพิ่ม:\n' + shortages.join('\n'));
+      }
+    });
+  }
+
+  function render(){
+    renderNav();
+    renderContent();
+  }
+
+  render();
+</script>
+
+</body>
+</html>

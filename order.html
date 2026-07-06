@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>บีนส์ ☕ สั่งเครื่องดื่ม</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=Bai+Jamjuree:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --coffee-dark:#3d2420;
+    --coffee:#5b3a2e;
+    --coffee-mid:#7b4b3a;
+    --coffee-light:#c99b6b;
+    --cream:#fff8f0;
+    --cream-2:#f6e7d6;
+    --accent:#a9713d;
+    --text:#3d2420;
+    --text2:#8a7a6e;
+    --danger:#c0492f;
+    --shadow:0 8px 24px rgba(61,36,32,0.12);
+    --shadow-sm:0 3px 12px rgba(61,36,32,0.08);
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; }
+  body{
+    font-family:"Anuphan","Sarabun",sans-serif;
+    background:var(--cream);
+    color:var(--text);
+    padding-bottom:120px;
+    max-width:560px;
+    margin:0 auto;
+    position:relative;
+    min-height:100vh;
+  }
+  h1,h2,h3,.big-num,.price,.hero-title{ font-family:"Bai Jamjuree","Anuphan",sans-serif; }
+
+  /* ---------- hero ---------- */
+  .hero{
+    background:linear-gradient(150deg, #5b3a2e 0%, #3d2420 100%);
+    color:var(--cream);
+    padding:38px 22px 30px;
+    border-radius:0 0 28px 28px;
+    box-shadow:var(--shadow);
+    position:relative;
+    overflow:hidden;
+  }
+  .hero::after{
+    content:"";
+    position:absolute;
+    right:-40px; top:-40px;
+    width:160px; height:160px;
+    background:radial-gradient(circle, rgba(201,155,107,0.35), transparent 70%);
+    border-radius:50%;
+  }
+  .hero-title{ font-size:2.3rem; margin:0; letter-spacing:1px; }
+  .hero-sub{ margin:6px 0 0; color:var(--coffee-light); font-size:1rem; font-weight:500; }
+
+  .screen{ padding:20px 16px 0; }
+  .section-label{
+    font-size:0.82rem; font-weight:700; color:var(--text2);
+    text-transform:uppercase; letter-spacing:1px; margin:6px 4px 12px;
+  }
+
+  /* ---------- menu grid ---------- */
+  .menu-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  .menu-card{
+    position:relative;
+    background:#fff;
+    border-radius:22px;
+    padding:18px 14px 14px;
+    box-shadow:var(--shadow-sm);
+    border:2.5px solid transparent;
+    cursor:pointer;
+    transition:transform 0.12s ease, border-color 0.12s ease;
+    text-align:center;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    user-select:none;
+  }
+  .menu-card:active{ transform:scale(0.97); }
+  .menu-card.selected{ border-color:var(--menu-color, var(--accent)); }
+  .menu-emoji{
+    width:72px; height:72px;
+    border-radius:22px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:2.2rem;
+    background:var(--menu-bg, var(--cream-2));
+    box-shadow:inset 0 -4px 10px rgba(0,0,0,0.05);
+  }
+  .menu-name{ font-weight:700; font-size:1.02rem; color:var(--text); }
+  .price{ font-size:0.95rem; color:var(--menu-color, var(--accent)); font-weight:700; }
+  .menu-badge{
+    position:absolute; top:-10px; right:-10px;
+    min-width:30px; height:30px; padding:0 6px;
+    border-radius:16px;
+    background:var(--menu-color, var(--accent));
+    color:#fff; font-weight:700; font-size:0.95rem;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 3px 8px rgba(0,0,0,0.2);
+    font-family:"Bai Jamjuree";
+  }
+  .stepper{
+    display:flex; align-items:center; gap:12px;
+    margin-top:2px;
+  }
+  .step-btn{
+    width:34px; height:34px; border-radius:12px; border:none;
+    background:var(--cream-2); color:var(--coffee);
+    font-size:1.3rem; font-weight:700; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .step-btn:active{ background:var(--menu-color, var(--accent)); color:#fff; }
+  .step-qty{ min-width:22px; font-weight:700; font-size:1.05rem; font-family:"Bai Jamjuree"; }
+
+  /* ---------- floating cart bar ---------- */
+  .cart-bar{
+    position:fixed;
+    left:50%; transform:translateX(-50%) translateY(140%);
+    bottom:16px;
+    width:min(528px, calc(100% - 24px));
+    background:linear-gradient(135deg, #7b4b3a, #4b2e2b);
+    color:#fff;
+    border-radius:20px;
+    padding:14px 18px;
+    display:flex; align-items:center; gap:14px;
+    box-shadow:0 10px 30px rgba(61,36,32,0.35);
+    cursor:pointer;
+    transition:transform 0.25s cubic-bezier(0.2,0.8,0.2,1);
+    z-index:30;
+  }
+  .cart-bar.show{ transform:translateX(-50%) translateY(0); }
+  .cart-info{ flex:1; min-width:0; }
+  .cart-count{ font-size:0.82rem; color:var(--coffee-light); font-weight:600; }
+  .cart-total{ font-size:1.25rem; font-weight:700; font-family:"Bai Jamjuree"; }
+  .cart-total::before{ content:"฿"; margin-right:2px; }
+  .cart-go{
+    background:var(--coffee-light); color:var(--coffee-dark);
+    padding:10px 18px; border-radius:14px; font-weight:700; font-size:1rem;
+    white-space:nowrap;
+  }
+
+  /* ---------- confirm sheet ---------- */
+  .sheet-backdrop{
+    position:fixed; inset:0; background:rgba(61,36,32,0.5);
+    opacity:0; pointer-events:none; transition:opacity 0.25s ease; z-index:40;
+  }
+  .sheet-backdrop.open{ opacity:1; pointer-events:auto; }
+  .sheet{
+    position:fixed; left:50%; transform:translateX(-50%) translateY(100%);
+    bottom:0; width:min(560px, 100%);
+    max-height:92vh; overflow-y:auto;
+    background:var(--cream);
+    border-radius:26px 26px 0 0;
+    padding:10px 18px calc(24px + env(safe-area-inset-bottom));
+    transition:transform 0.3s cubic-bezier(0.2,0.8,0.2,1);
+    z-index:41;
+  }
+  .sheet.open{ transform:translateX(-50%) translateY(0); }
+  .sheet-handle{ width:44px; height:5px; border-radius:3px; background:var(--cream-2); margin:6px auto 14px; }
+  .sheet h2{ margin:0 0 14px; font-size:1.3rem; }
+  .sheet-block{ background:#fff; border-radius:18px; padding:14px 16px; margin-bottom:14px; box-shadow:var(--shadow-sm); }
+  .sheet-block h3{ margin:0 0 10px; font-size:0.95rem; color:var(--coffee-mid); }
+  .confirm-line{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:9px 0; border-bottom:1px solid var(--cream-2); gap:10px;
+  }
+  .confirm-line:last-child{ border-bottom:none; }
+  .cl-left{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .cl-emoji{ font-size:1.4rem; }
+  .cl-name{ font-weight:600; }
+  .cl-price{ font-size:0.8rem; color:var(--text2); }
+  .cl-amount{ font-weight:700; font-family:"Bai Jamjuree"; color:var(--accent); }
+  .cl-amount::before{ content:"฿"; margin-right:1px; }
+
+  label{ display:block; font-size:0.88rem; font-weight:600; color:var(--coffee-mid); margin-bottom:6px; }
+  input[type="text"], input[type="tel"]{
+    width:100%; padding:13px 14px; border:1.5px solid var(--cream-2);
+    border-radius:14px; font-size:1rem; font-family:inherit;
+    background:var(--cream); color:var(--text); margin-bottom:14px;
+  }
+  input:focus{ outline:none; border-color:var(--accent); }
+
+  .table-pills{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:6px; }
+  .table-pill{
+    width:48px; height:48px; border-radius:16px; border:2px solid var(--cream-2);
+    background:#fff; font-weight:700; font-size:1.05rem; cursor:pointer; color:var(--text);
+    font-family:"Bai Jamjuree";
+  }
+  .table-pill.takeaway{ width:auto; padding:0 18px; }
+  .table-pill.selected{ border-color:var(--accent); background:var(--accent); color:#fff; }
+
+  .total-big{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:1.15rem; font-weight:700; margin:4px 2px 14px;
+  }
+  .total-big .amt{ font-family:"Bai Jamjuree"; color:var(--accent); font-size:1.5rem; }
+  .total-big .amt::before{ content:"฿"; margin-right:2px; }
+
+  .btn-confirm{
+    width:100%; padding:16px; border:none; border-radius:18px;
+    background:linear-gradient(135deg, #7b4b3a, #4b2e2b); color:#fff;
+    font-size:1.15rem; font-weight:700; font-family:inherit; cursor:pointer;
+  }
+  .btn-confirm:disabled{ background:#cbb8ab; cursor:not-allowed; }
+  .sheet-msg{ text-align:center; color:var(--danger); font-size:0.88rem; min-height:1.1em; margin-top:8px; }
+  .btn-back-sheet{
+    width:100%; padding:12px; margin-top:8px; border:none; background:none;
+    color:var(--text2); font-size:0.95rem; font-weight:600; cursor:pointer; font-family:inherit;
+  }
+
+  /* ---------- thank you ---------- */
+  .thankyou{
+    display:none;
+    min-height:100vh;
+    flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:40px 24px;
+    background:linear-gradient(160deg, var(--cream), var(--cream-2));
+  }
+  .thankyou.show{ display:flex; }
+  .ty-check{
+    width:88px; height:88px; border-radius:50%;
+    background:linear-gradient(135deg, #7b4b3a, #4b2e2b); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:2.6rem;
+    margin-bottom:18px; box-shadow:var(--shadow);
+  }
+  .ty-label{ font-size:1rem; color:var(--text2); font-weight:600; }
+  .ty-queue{
+    font-family:"Bai Jamjuree"; font-weight:700;
+    font-size:5.5rem; line-height:1.05; color:var(--coffee-dark);
+    margin:2px 0 6px;
+  }
+  .ty-name{ font-size:1.25rem; font-weight:700; margin-bottom:14px; }
+  .ty-items{
+    background:#fff; border-radius:18px; padding:14px 18px;
+    box-shadow:var(--shadow-sm); width:100%; max-width:340px; margin-bottom:18px;
+    text-align:left;
+  }
+  .ty-items .ty-item-row{ display:flex; justify-content:space-between; padding:5px 0; font-size:0.95rem; }
+  .ty-msg{ font-size:1.05rem; color:var(--coffee-mid); font-weight:600; margin-bottom:26px; }
+  .btn-again{
+    padding:15px 34px; border:none; border-radius:18px;
+    background:var(--coffee-light); color:var(--coffee-dark);
+    font-size:1.1rem; font-weight:700; font-family:inherit; cursor:pointer;
+  }
+
+  .empty-hint{ text-align:center; color:var(--text2); font-size:0.92rem; padding:8px; }
+</style>
+</head>
+<body>
+
+<!-- ===== MAIN ORDER SCREEN ===== -->
+<div id="mainScreen">
+  <div class="hero">
+    <h1 class="hero-title">บีนส์ ☕</h1>
+    <p class="hero-sub">สั่งเลย รับที่เคาน์เตอร์</p>
+  </div>
+
+  <div class="screen">
+    <div class="section-label">เลือกเครื่องดื่ม & ขนม</div>
+    <div class="menu-grid" id="menuGrid"></div>
+  </div>
+</div>
+
+<!-- ===== FLOATING CART BAR ===== -->
+<div class="cart-bar" id="cartBar">
+  <div class="cart-info">
+    <div class="cart-count" id="cartCount">0 รายการ</div>
+    <div class="cart-total" id="cartTotal">0</div>
+  </div>
+  <div class="cart-go">สั่งเลย →</div>
+</div>
+
+<!-- ===== CONFIRM SHEET ===== -->
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
+<div class="sheet" id="confirmSheet">
+  <div class="sheet-handle"></div>
+  <h2>ยืนยันคำสั่งซื้อ</h2>
+
+  <div class="sheet-block">
+    <h3>รายการของคุณ</h3>
+    <div id="confirmList"></div>
+  </div>
+
+  <div class="sheet-block">
+    <h3>ข้อมูลลูกค้า</h3>
+    <label for="custName">ชื่อของคุณ</label>
+    <input type="text" id="custName" placeholder="เช่น คุณมายด์" autocomplete="off">
+
+    <label>รับที่โต๊ะไหน?</label>
+    <div class="table-pills" id="tablePills"></div>
+
+    <label for="custPhone" style="margin-top:14px;">เบอร์โทร (ไม่บังคับ)</label>
+    <input type="tel" id="custPhone" placeholder="ใส่ไว้เผื่อเรียกรับ" autocomplete="off">
+  </div>
+
+  <div class="total-big"><span>ยอดรวม</span><span class="amt" id="confirmTotal">0</span></div>
+  <button type="button" class="btn-confirm" id="placeOrderBtn">ยืนยันสั่ง ☕</button>
+  <div class="sheet-msg" id="sheetMsg"></div>
+  <button type="button" class="btn-back-sheet" id="closeSheetBtn">← กลับไปแก้ไข</button>
+</div>
+
+<!-- ===== THANK YOU SCREEN ===== -->
+<div class="thankyou" id="thankyouScreen">
+  <div class="ty-check">✓</div>
+  <div class="ty-label">คิวของคุณคือ</div>
+  <div class="ty-queue" id="tyQueue">Q00</div>
+  <div class="ty-name" id="tyName"></div>
+  <div class="ty-items" id="tyItems"></div>
+  <div class="ty-msg">รอเรียกที่เคาน์เตอร์ได้เลยค่ะ ☕</div>
+  <button type="button" class="btn-again" id="orderAgainBtn">สั่งเพิ่ม</button>
+</div>
+
+<script>
+  // ใช้เมนู/ราคาชุดเดียวกับหลังบ้าน + เขียนลง localStorage คีย์เดียวกัน "beansERP"
+  const STORAGE_KEY = 'beansERP';
+  const MENU = [
+    { id: 'americano', name: 'อเมริกาโน่', price: 55, emoji: '☕', color: '#a9713d', bg: '#f4e3d0' },
+    { id: 'latte', name: 'ลาเต้', price: 65, emoji: '🥛', color: '#4b7b98', bg: '#e2eef4' },
+    { id: 'cappuccino', name: 'คาปูชิโน่', price: 65, emoji: '☕', color: '#7b4b3a', bg: '#eaddd3' },
+    { id: 'thaitea', name: 'ชาไทย', price: 50, emoji: '🍵', color: '#e0833f', bg: '#fdeede' },
+    { id: 'cocoa', name: 'โกโก้', price: 60, emoji: '🍫', color: '#8a4b2f', bg: '#efdccf' },
+    { id: 'bananacake', name: 'เค้กกล้วยหอม', price: 45, emoji: '🍰', color: '#c76b8e', bg: '#fbe6ee' }
+  ];
+  const TABLE_IDS = ['1','2','3','4','5','6','7','8'];
+
+  const cart = {};   // { menuId: qty }
+  let selectedTable = null;   // '1'..'8' หรือ 'กลับบ้าน'
+
+  function getData(){
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { orders: [], stock: [], checkins: [] }; }
+    catch(e){ return { orders: [], stock: [], checkins: [] }; }
+  }
+  function saveData(data){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+
+  function getMenu(id){ return MENU.find(m => m.id === id); }
+  function formatMoney(n){ return n.toLocaleString('th-TH'); }
+  function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+
+  function cartTotal(){
+    return Object.entries(cart).reduce((sum, [id, qty]) => sum + getMenu(id).price * qty, 0);
+  }
+  function cartCount(){
+    return Object.values(cart).reduce((a, b) => a + b, 0);
+  }
+
+  // ---------- render menu ----------
+  const menuGridEl = document.getElementById('menuGrid');
+  function renderMenu(){
+    menuGridEl.innerHTML = MENU.map(m => {
+      const qty = cart[m.id] || 0;
+      return `
+        <div class="menu-card ${qty > 0 ? 'selected' : ''}" data-id="${m.id}"
+             style="--menu-color:${m.color}; --menu-bg:${m.bg};">
+          ${qty > 0 ? `<span class="menu-badge">${qty}</span>` : ''}
+          <div class="menu-emoji">${m.emoji}</div>
+          <div class="menu-name">${m.name}</div>
+          <div class="price">${m.price} บาท</div>
+          <div class="stepper">
+            <button type="button" class="step-btn" data-act="dec">−</button>
+            <span class="step-qty">${qty}</span>
+            <button type="button" class="step-btn" data-act="inc">+</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function changeQty(id, delta){
+    const next = (cart[id] || 0) + delta;
+    if (next <= 0) delete cart[id];
+    else cart[id] = next;
+    renderMenu();
+    renderCartBar();
+  }
+
+  menuGridEl.addEventListener('click', (e) => {
+    const card = e.target.closest('.menu-card');
+    if (!card) return;
+    const id = card.dataset.id;
+    const stepBtn = e.target.closest('.step-btn');
+    if (stepBtn){
+      changeQty(id, stepBtn.dataset.act === 'inc' ? 1 : -1);
+    } else {
+      changeQty(id, 1); // แตะทั้งการ์ด = เพิ่ม 1
+    }
+  });
+
+  // ---------- cart bar ----------
+  const cartBarEl = document.getElementById('cartBar');
+  const cartCountEl = document.getElementById('cartCount');
+  const cartTotalEl = document.getElementById('cartTotal');
+  function renderCartBar(){
+    const count = cartCount();
+    cartCountEl.textContent = count + ' รายการ';
+    cartTotalEl.textContent = formatMoney(cartTotal());
+    cartBarEl.classList.toggle('show', count > 0);
+  }
+  cartBarEl.addEventListener('click', openSheet);
+
+  // ---------- confirm sheet ----------
+  const sheetBackdrop = document.getElementById('sheetBackdrop');
+  const confirmSheet = document.getElementById('confirmSheet');
+  const confirmListEl = document.getElementById('confirmList');
+  const confirmTotalEl = document.getElementById('confirmTotal');
+  const tablePillsEl = document.getElementById('tablePills');
+  const sheetMsgEl = document.getElementById('sheetMsg');
+
+  function renderTablePills(){
+    tablePillsEl.innerHTML =
+      TABLE_IDS.map(id => `<button type="button" class="table-pill ${selectedTable === id ? 'selected' : ''}" data-table="${id}">${id}</button>`).join('')
+      + `<button type="button" class="table-pill takeaway ${selectedTable === 'กลับบ้าน' ? 'selected' : ''}" data-table="กลับบ้าน">🛍 กลับบ้าน</button>`;
+  }
+
+  tablePillsEl.addEventListener('click', (e) => {
+    const pill = e.target.closest('.table-pill');
+    if (!pill) return;
+    selectedTable = pill.dataset.table;
+    renderTablePills();
+  });
+
+  function renderConfirmList(){
+    const ids = Object.keys(cart);
+    if (ids.length === 0){
+      confirmListEl.innerHTML = '<div class="empty-hint">ยังไม่มีรายการ</div>';
+      return;
+    }
+    confirmListEl.innerHTML = ids.map(id => {
+      const m = getMenu(id);
+      const qty = cart[id];
+      return `
+        <div class="confirm-line" data-id="${id}">
+          <div class="cl-left">
+            <span class="cl-emoji">${m.emoji}</span>
+            <div>
+              <div class="cl-name">${m.name}</div>
+              <div class="cl-price">฿${m.price} x ${qty}</div>
+            </div>
+          </div>
+          <div class="stepper">
+            <button type="button" class="step-btn" data-act="dec" style="--menu-color:${m.color};">−</button>
+            <span class="step-qty">${qty}</span>
+            <button type="button" class="step-btn" data-act="inc" style="--menu-color:${m.color};">+</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  confirmListEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.step-btn');
+    if (!btn) return;
+    const line = e.target.closest('.confirm-line');
+    const id = line.dataset.id;
+    changeQty(id, btn.dataset.act === 'inc' ? 1 : -1);
+    if (cartCount() === 0){ closeSheet(); return; }
+    renderConfirmList();
+    confirmTotalEl.textContent = formatMoney(cartTotal());
+  });
+
+  function openSheet(){
+    if (cartCount() === 0) return;
+    sheetMsgEl.textContent = '';
+    renderConfirmList();
+    renderTablePills();
+    confirmTotalEl.textContent = formatMoney(cartTotal());
+    sheetBackdrop.classList.add('open');
+    confirmSheet.classList.add('open');
+  }
+  function closeSheet(){
+    sheetBackdrop.classList.remove('open');
+    confirmSheet.classList.remove('open');
+  }
+  sheetBackdrop.addEventListener('click', closeSheet);
+  document.getElementById('closeSheetBtn').addEventListener('click', closeSheet);
+
+  // ---------- place order ----------
+  function todayOnlineCount(data){
+    const todayStr = new Date().toDateString();
+    return data.orders.filter(o => o.source === 'online' && new Date(o.createdAt).toDateString() === todayStr).length;
+  }
+
+  document.getElementById('placeOrderBtn').addEventListener('click', () => {
+    const name = document.getElementById('custName').value.trim();
+    const phone = document.getElementById('custPhone').value.trim();
+    if (cartCount() === 0){ sheetMsgEl.textContent = 'ยังไม่มีรายการในตะกร้า'; return; }
+    if (name === ''){ sheetMsgEl.textContent = 'กรุณากรอกชื่อของคุณ'; document.getElementById('custName').focus(); return; }
+    if (!selectedTable){ sheetMsgEl.textContent = 'กรุณาเลือกโต๊ะ หรือ กลับบ้าน'; return; }
+
+    const data = getData();
+    const items = Object.entries(cart).map(([menuId, qty]) => ({ menuId, qty }));
+    const total = cartTotal();
+    const queueNo = todayOnlineCount(data) + 1;
+
+    const order = {
+      id: Date.now(),
+      source: 'online',
+      table: selectedTable,
+      customer: { name, phone: phone || null },
+      items,
+      total,
+      status: 'new',
+      createdAt: Date.now(),
+      paidAt: null,
+      payMethod: null,
+      queueNo
+    };
+    data.orders.push(order);
+    saveData(data);
+
+    showThankYou(order);
+  });
+
+  // ---------- thank you ----------
+  const mainScreen = document.getElementById('mainScreen');
+  const thankyouScreen = document.getElementById('thankyouScreen');
+
+  function showThankYou(order){
+    closeSheet();
+    document.getElementById('tyQueue').textContent = 'Q' + String(order.queueNo).padStart(2, '0');
+    document.getElementById('tyName').textContent = 'คุณ' + order.customer.name +
+      ' · ' + (order.table === 'กลับบ้าน' ? 'กลับบ้าน' : 'โต๊ะ ' + order.table);
+    document.getElementById('tyItems').innerHTML = order.items.map(it => {
+      const m = getMenu(it.menuId);
+      return `<div class="ty-item-row"><span>${m.emoji} ${m.name} x${it.qty}</span><span>฿${formatMoney(m.price * it.qty)}</span></div>`;
+    }).join('') + `<div class="ty-item-row" style="border-top:1px solid var(--cream-2); margin-top:6px; padding-top:8px; font-weight:700;"><span>ยอดรวม</span><span>฿${formatMoney(order.total)}</span></div>`;
+
+    mainScreen.style.display = 'none';
+    cartBarEl.classList.remove('show');
+    thankyouScreen.classList.add('show');
+    window.scrollTo(0, 0);
+  }
+
+  document.getElementById('orderAgainBtn').addEventListener('click', () => {
+    for (const k in cart) delete cart[k];
+    selectedTable = null;
+    document.getElementById('custName').value = '';
+    document.getElementById('custPhone').value = '';
+    thankyouScreen.classList.remove('show');
+    mainScreen.style.display = '';
+    renderMenu();
+    renderCartBar();
+    window.scrollTo(0, 0);
+  });
+
+  // ---------- init ----------
+  renderMenu();
+  renderCartBar();
+</script>
+
+</body>
+</html>
