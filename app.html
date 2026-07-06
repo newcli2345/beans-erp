@@ -326,7 +326,7 @@
     <div class="app-topbar">
       <button type="button" class="hamburger" id="hamburgerBtn">☰</button>
       <div class="page-title" id="pageTitle">แดชบอร์ด</div>
-      <div class="topbar-right"></div>
+      <div class="topbar-right" id="topbarRight"></div>
     </div>
     <div class="app-content" id="appContent"></div>
   </div>
@@ -335,6 +335,7 @@
 <script>
   const MENU_ITEMS = [
     { id: 'dashboard', icon: '📊', label: 'แดชบอร์ด' },
+    { id: 'incoming', icon: '🛎', label: 'ออเดอร์เข้า' },
     { id: 'sales', icon: '🛒', label: 'ขาย' },
     { id: 'stock', icon: '📦', label: 'สต๊อก' },
     { id: 'bom', icon: '🧾', label: 'สูตร BOM' },
@@ -342,6 +343,31 @@
   ];
 
   const STORAGE_KEY = 'beansERP';
+
+  // ฐานข้อมูลกลาง (Supabase) สำหรับออเดอร์จากลูกค้าหน้าเว็บ order.html
+  // ให้ข้ามเครื่อง/ข้ามอุปกรณ์กับหลังบ้านได้ (ตาราง online_orders)
+  const SUPABASE_URL = 'https://ugcgtvsfygbdchaugylo.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVnY2d0dnNmeWdiZGNoYXVneWxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzMjczNjAsImV4cCI6MjA5ODkwMzM2MH0.TszEQEptKLaxPXmGnEVqAkqS9cMFLReO_hYiJ5rmOT4';
+  const SB_HEADERS = {
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+    'Content-Type': 'application/json'
+  };
+
+  async function sbGetActiveOnlineOrders(){
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/online_orders?select=*&status=neq.paid&order=created_at.asc`, { headers: SB_HEADERS });
+    if (!res.ok) throw new Error('fetch failed: ' + res.status);
+    return res.json();
+  }
+  async function sbUpdateOnlineOrder(id, patch){
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/online_orders?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { ...SB_HEADERS, 'Prefer': 'return=representation' },
+      body: JSON.stringify(patch)
+    });
+    if (!res.ok) throw new Error('update failed: ' + res.status);
+    return res.json();
+  }
 
   const MENU = [
     { id: 'americano', name: 'อเมริกาโน่', price: 55, unit: 'แก้ว' },
@@ -568,11 +594,144 @@
     const item = MENU_ITEMS.find(m => m.id === state.activeMenu);
     pageTitleEl.textContent = item.label;
     if (state.activeMenu === 'dashboard'){ renderDashboardView(); return; }
+    if (state.activeMenu === 'incoming'){ renderIncomingView(); return; }
     if (state.activeMenu === 'sales'){ renderSalesView(); return; }
     if (state.activeMenu === 'stock'){ renderStockView(); return; }
     if (state.activeMenu === 'bom'){ renderBomView(); return; }
     if (state.activeMenu === 'checkin'){ renderCheckinView(); return; }
     appContentEl.innerHTML = placeholderView(item.icon, item.label, PLACEHOLDER_NOTES[item.id] || 'ยังไม่มีเนื้อหา');
+  }
+
+  // ---------- incoming online orders (TASK 9) ----------
+  const topbarRightEl = document.getElementById('topbarRight');
+  let lastIncomingOrders = [];
+
+  function incomingStatusMeta(status){
+    if (status === 'new') return { label: 'ใหม่', next: 'cooking', nextLabel: 'เริ่มทำ', color: 'var(--danger)', bg: 'var(--danger-bg)' };
+    if (status === 'cooking') return { label: 'กำลังทำ', next: 'ready', nextLabel: 'ทำเสร็จแล้ว', color: 'var(--warning)', bg: 'var(--warning-bg)' };
+    if (status === 'ready') return { label: 'เสร็จรอรับ', next: null, color: 'var(--success)', bg: 'var(--success-bg)' };
+    return { label: status, next: null, color: 'var(--text2)', bg: '#eee' };
+  }
+
+  function updateIncomingBadge(orders){
+    const count = orders.filter(o => o.status === 'new' || o.status === 'cooking').length;
+    topbarRightEl.innerHTML = count > 0
+      ? `<span class="pill pill-danger" style="font-size:0.8rem;">🛎 ${count}</span>`
+      : '';
+  }
+
+  async function pollIncomingOrders(){
+    try {
+      const orders = await sbGetActiveOnlineOrders();
+      lastIncomingOrders = orders;
+      updateIncomingBadge(orders);
+      if (state.activeMenu === 'incoming') renderIncomingList(orders);
+    } catch (err) {
+      if (state.activeMenu === 'incoming' && appContentEl.dataset.incomingLoaded !== '1'){
+        appContentEl.innerHTML = '<div class="empty-note">เชื่อมต่อฐานข้อมูลไม่ได้ กำลังลองใหม่...</div>';
+      }
+    }
+  }
+  setInterval(pollIncomingOrders, 3000);
+
+  function renderIncomingView(){
+    appContentEl.dataset.incomingLoaded = '0';
+    appContentEl.innerHTML = '<div class="empty-note">กำลังโหลดออเดอร์...</div>';
+    pollIncomingOrders();
+  }
+
+  function renderIncomingList(orders){
+    appContentEl.dataset.incomingLoaded = '1';
+    if (orders.length === 0){
+      appContentEl.innerHTML = '<div class="card"><div class="empty-note">ยังไม่มีออเดอร์เข้าใหม่</div></div>';
+      return;
+    }
+    appContentEl.innerHTML = orders.map(o => {
+      const meta = incomingStatusMeta(o.status);
+      const tableLabel = o.table_no === 'กลับบ้าน' ? 'กลับบ้าน' : 'โต๊ะ ' + o.table_no;
+      const itemsHtml = o.items.map(it => {
+        const m = getMenuItem(it.menuId);
+        return `<li>${escapeHtml(m.name)} x${it.qty}</li>`;
+      }).join('');
+      const actionHtml = meta.next
+        ? `<button type="button" class="btn-primary" data-action="advance" data-id="${o.id}" data-next="${meta.next}" style="width:auto; margin-top:0;">${meta.nextLabel} →</button>`
+        : `
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <span style="font-size:0.85rem; color:var(--text2); font-weight:600;">รับแล้ว+เก็บเงิน:</span>
+            <button type="button" class="btn-primary" data-action="pay" data-id="${o.id}" data-method="cash" style="width:auto; margin-top:0;">💵 เงินสด</button>
+            <button type="button" class="btn-primary" data-action="pay" data-id="${o.id}" data-method="transfer" style="width:auto; margin-top:0;">📱 โอน</button>
+          </div>
+        `;
+      return `
+        <div class="card" style="border-left:6px solid ${meta.color};">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong>Q${String(o.queue_no).padStart(2,'0')} · ${escapeHtml(tableLabel)}</strong>
+            <span class="pill" style="background:${meta.bg}; color:${meta.color};">${meta.label}</span>
+          </div>
+          <div style="font-size:0.88rem; color:var(--text2); margin-bottom:8px;">
+            ${escapeHtml(o.customer.name)}${o.customer.phone ? ' · ' + escapeHtml(o.customer.phone) : ''} · ${formatTime(o.created_at)}
+          </div>
+          <ul style="margin:0 0 10px; padding-left:18px; font-size:0.9rem;">${itemsHtml}</ul>
+          <div class="total-row" style="margin-bottom:12px;"><span>ยอดรวม</span><span class="amount">${formatMoney(o.total)}</span></div>
+          ${actionHtml}
+        </div>
+      `;
+    }).join('');
+  }
+
+  appContentEl.addEventListener('click', async (e) => {
+    const advBtn = e.target.closest('[data-action="advance"]');
+    const payBtn = e.target.closest('[data-action="pay"]');
+    if (advBtn){
+      const id = Number(advBtn.dataset.id);
+      advBtn.disabled = true;
+      try {
+        await sbUpdateOnlineOrder(id, { status: advBtn.dataset.next });
+        await pollIncomingOrders();
+      } catch (err) {
+        alert('อัปเดตสถานะไม่สำเร็จ เช็คอินเทอร์เน็ตแล้วลองใหม่');
+        advBtn.disabled = false;
+      }
+    }
+    if (payBtn){
+      const id = Number(payBtn.dataset.id);
+      const method = payBtn.dataset.method;
+      const order = lastIncomingOrders.find(o => o.id === id);
+      if (!order) return;
+      payBtn.disabled = true;
+      try {
+        await finalizeIncomingOrder(order, method);
+      } catch (err) {
+        alert('บันทึกการชำระเงินไม่สำเร็จ เช็คอินเทอร์เน็ตแล้วลองใหม่');
+        payBtn.disabled = false;
+      }
+    }
+  });
+
+  async function finalizeIncomingOrder(remoteOrder, payMethod){
+    const data = getData();
+    const localOrder = {
+      id: Date.now(),
+      source: 'online',
+      table: remoteOrder.table_no,
+      customer: remoteOrder.customer,
+      items: remoteOrder.items,
+      total: remoteOrder.total,
+      status: 'paid',
+      createdAt: remoteOrder.created_at,
+      paidAt: Date.now(),
+      payMethod
+    };
+    data.orders.push(localOrder);
+    const shortages = deductStockForOrder(data, localOrder);
+    saveData(data);
+
+    await sbUpdateOnlineOrder(remoteOrder.id, { status: 'paid', paid_at: localOrder.paidAt, pay_method: payMethod });
+    await pollIncomingOrders();
+
+    if (shortages.length > 0){
+      alert('⚠️ วัตถุดิบไม่พอสำหรับบิลนี้ ระบบตัดให้เหลือ 0 แล้ว กรุณารับของเข้าเพิ่ม:\n' + shortages.join('\n'));
+    }
   }
 
   // ---------- dashboard view ----------
@@ -1217,6 +1376,7 @@
   }
 
   render();
+  pollIncomingOrders();
 </script>
 
 </body>

@@ -319,8 +319,35 @@
 </div>
 
 <script>
-  // ใช้เมนู/ราคาชุดเดียวกับหลังบ้าน + เขียนลง localStorage คีย์เดียวกัน "beansERP"
+  // ใช้เมนู/ราคาชุดเดียวกับหลังบ้าน + ส่งออเดอร์ขึ้นฐานข้อมูลกลาง (Supabase)
+  // เพื่อให้ลูกค้าสั่งจากมือถือตัวเองแล้วออเดอร์เด้งเข้าหลังบ้านคนละเครื่องได้
   const STORAGE_KEY = 'beansERP';
+  const SUPABASE_URL = 'https://ugcgtvsfygbdchaugylo.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVnY2d0dnNmeWdiZGNoYXVneWxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzMjczNjAsImV4cCI6MjA5ODkwMzM2MH0.TszEQEptKLaxPXmGnEVqAkqS9cMFLReO_hYiJ5rmOT4';
+  const SB_HEADERS = {
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+    'Content-Type': 'application/json'
+  };
+
+  async function sbInsertOnlineOrder(order){
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/online_orders`, {
+      method: 'POST',
+      headers: { ...SB_HEADERS, 'Prefer': 'return=representation' },
+      body: JSON.stringify(order)
+    });
+    if (!res.ok) throw new Error('insert failed: ' + res.status);
+    const rows = await res.json();
+    return rows[0];
+  }
+
+  async function sbTodayOnlineCount(){
+    const midnight = new Date(); midnight.setHours(0, 0, 0, 0);
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/online_orders?select=id&created_at=gte.${midnight.getTime()}`, { headers: SB_HEADERS });
+    if (!res.ok) throw new Error('count failed: ' + res.status);
+    const rows = await res.json();
+    return rows.length;
+  }
   const MENU = [
     { id: 'americano', name: 'อเมริกาโน่', price: 55, emoji: '☕', color: '#a9713d', bg: '#f4e3d0' },
     { id: 'latte', name: 'ลาเต้', price: 65, emoji: '🥛', color: '#4b7b98', bg: '#e2eef4' },
@@ -333,12 +360,6 @@
 
   const cart = {};   // { menuId: qty }
   let selectedTable = null;   // '1'..'8' หรือ 'กลับบ้าน'
-
-  function getData(){
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { orders: [], stock: [], checkins: [] }; }
-    catch(e){ return { orders: [], stock: [], checkins: [] }; }
-  }
-  function saveData(data){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 
   function getMenu(id){ return MENU.find(m => m.id === id); }
   function formatMoney(n){ return n.toLocaleString('th-TH'); }
@@ -481,41 +502,45 @@
   sheetBackdrop.addEventListener('click', closeSheet);
   document.getElementById('closeSheetBtn').addEventListener('click', closeSheet);
 
-  // ---------- place order ----------
-  function todayOnlineCount(data){
-    const todayStr = new Date().toDateString();
-    return data.orders.filter(o => o.source === 'online' && new Date(o.createdAt).toDateString() === todayStr).length;
-  }
+  // ---------- place order (ส่งขึ้น Supabase เพื่อให้หลังบ้านคนละเครื่องเห็นได้) ----------
+  const placeOrderBtn = document.getElementById('placeOrderBtn');
 
-  document.getElementById('placeOrderBtn').addEventListener('click', () => {
+  placeOrderBtn.addEventListener('click', async () => {
     const name = document.getElementById('custName').value.trim();
     const phone = document.getElementById('custPhone').value.trim();
     if (cartCount() === 0){ sheetMsgEl.textContent = 'ยังไม่มีรายการในตะกร้า'; return; }
     if (name === ''){ sheetMsgEl.textContent = 'กรุณากรอกชื่อของคุณ'; document.getElementById('custName').focus(); return; }
     if (!selectedTable){ sheetMsgEl.textContent = 'กรุณาเลือกโต๊ะ หรือ กลับบ้าน'; return; }
 
-    const data = getData();
     const items = Object.entries(cart).map(([menuId, qty]) => ({ menuId, qty }));
     const total = cartTotal();
-    const queueNo = todayOnlineCount(data) + 1;
 
-    const order = {
-      id: Date.now(),
-      source: 'online',
-      table: selectedTable,
-      customer: { name, phone: phone || null },
-      items,
-      total,
-      status: 'new',
-      createdAt: Date.now(),
-      paidAt: null,
-      payMethod: null,
-      queueNo
-    };
-    data.orders.push(order);
-    saveData(data);
+    sheetMsgEl.style.color = 'var(--text2)';
+    sheetMsgEl.textContent = 'กำลังส่งออเดอร์...';
+    placeOrderBtn.disabled = true;
 
-    showThankYou(order);
+    try {
+      const queueNo = (await sbTodayOnlineCount()) + 1;
+      const payload = {
+        source: 'online',
+        table_no: selectedTable,
+        customer: { name, phone: phone || null },
+        items,
+        total,
+        status: 'new',
+        created_at: Date.now(),
+        paid_at: null,
+        pay_method: null,
+        queue_no: queueNo
+      };
+      const saved = await sbInsertOnlineOrder(payload);
+      showThankYou(saved);
+    } catch (err) {
+      sheetMsgEl.style.color = 'var(--danger)';
+      sheetMsgEl.textContent = 'ส่งออเดอร์ไม่สำเร็จ เช็คสัญญาณอินเทอร์เน็ตแล้วลองใหม่';
+    } finally {
+      placeOrderBtn.disabled = false;
+    }
   });
 
   // ---------- thank you ----------
@@ -524,9 +549,9 @@
 
   function showThankYou(order){
     closeSheet();
-    document.getElementById('tyQueue').textContent = 'Q' + String(order.queueNo).padStart(2, '0');
+    document.getElementById('tyQueue').textContent = 'Q' + String(order.queue_no).padStart(2, '0');
     document.getElementById('tyName').textContent = 'คุณ' + order.customer.name +
-      ' · ' + (order.table === 'กลับบ้าน' ? 'กลับบ้าน' : 'โต๊ะ ' + order.table);
+      ' · ' + (order.table_no === 'กลับบ้าน' ? 'กลับบ้าน' : 'โต๊ะ ' + order.table_no);
     document.getElementById('tyItems').innerHTML = order.items.map(it => {
       const m = getMenu(it.menuId);
       return `<div class="ty-item-row"><span>${m.emoji} ${m.name} x${it.qty}</span><span>฿${formatMoney(m.price * it.qty)}</span></div>`;
